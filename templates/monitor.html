@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoraggio {% if driver %}{{ driver.first_name }} {{ driver.last_name }}{% endif %} - Sistema di Gestione Autisti{% endblock %}
+
+{% block additional_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="page-header-content">
+            <div class="header-info">
+                <h1 class="page-title">
+                    Monitoraggio: 
+                    {% if driver %}
+                        <span class="driver-highlight">{{ driver.first_name }} {{ driver.last_name }}</span>
+                    {% else %}
+                        <span class="driver-highlight">Autista</span>
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle">Sessione di monitoraggio in tempo reale</p>
+            </div>
+            
+            <div class="header-actions">
+                <button id="startStopBtn" class="btn btn-primary">
+                    <svg class="btn-icon start-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5,3 19,12 5,21 5,3"></polygon>
+                    </svg>
+                    <svg class="btn-icon stop-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                    <span id="startStopText">Avvia Monitoraggio</span>
+                </button>
+                
+                <a href="/drivers" class="btn btn-secondary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m15 18-6-6 6-6"></path>
+                    </svg>
+                    Torna agli Autisti
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitoring Content -->
+<div class="monitoring-content">
+    <div class="container">
+        <div class="monitoring-grid">
+            <!-- Webcam Feed Section -->
+            <div class="webcam-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            Webcam Feed
+                        </h2>
+                        <div class="webcam-status">
+                            <span class="status-indicator" id="webcamStatus"></span>
+                            <span id="webcamStatusText">Inizializzazione...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="webcam-container">
+                        <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
+                        <div id="webcamOverlay" class="webcam-overlay">
+                            <div class="webcam-message">
+                                <div class="webcam-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                        <circle cx="12" cy="13" r="4"></circle>
+                                    </svg>
+                                </div>
+                                <p id="webcamMessageText">Inizializzazione webcam...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Emotion Detection Overlay -->
+                        <div id="emotionOverlay" class="emotion-overlay hidden">
+                            <div class="emotion-indicators">
+                                <div class="emotion-indicator stress">
+                                    <span class="indicator-label">Stress</span>
+                                    <div class="indicator-bar">
+                                        <div class="indicator-fill" id="stressBar"></div>
+                                    </div>
+                                    <span class="indicator-value" id="stressValue">0%</span>
+                                </div>
+                                
+                                <div class="emotion-indicator focus">
+                                    <span class="indicator-label">Focus</span>
+                                    <div class="indicator-bar">
+                                        <div class="indicator-fill" id="focusBar"></div>
+                                    </div>
+                                    <span class="indicator-value" id="focusValue">0%</span>
+                                </div>
+                                
+                                <div class="emotion-indicator calm">
+                                    <span class="indicator-label">Calma</span>
+                                    <div class="indicator-bar">
+                                        <div class="indicator-fill" id="calmBar"></div>
+                                    </div>
+                                    <span class="indicator-value" id="calmValue">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="webcam-controls">
+                        <button id="toggleEmotionOverlay" class="btn btn-secondary btn-sm">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            Mostra/Nascondi Indicatori
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Emotion Chart Section -->
+            <div class="chart-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                            </svg>
+                            Analisi Emotiva in Tempo Reale
+                        </h2>
+                        <div class="chart-controls">
+                            <button id="pauseChart" class="btn btn-secondary btn-sm">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="6" y="4" width="4" height="16"></rect>
+                                    <rect x="14" y="4" width="4" height="16"></rect>
+                                </svg>
+                                Pausa
+                            </button>
+                            <button id="clearChart" class="btn btn-secondary btn-sm">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="1,4 1,10 7,10"></polyline>
+                                    <path d="M3.51,15a9,9,0,0,0,13.48,0,9,9,0,0,0,.5-13.38L7,12"></path>
+                                </svg>
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="emotionChart" class="emotion-chart"></canvas>
+                    </div>
+                    
+                    <div class="chart-legend">
+                        <div class="legend-item stress">
+                            <span class="legend-color"></span>
+                            <span class="legend-label">Stress</span>
+                        </div>
+                        <div class="legend-item focus">
+                            <span class="legend-color"></span>
+                            <span class="legend-label">Focus</span>
+                        </div>
+                        <div class="legend-item calm">
+                            <span class="legend-color"></span>
+                            <span class="legend-label">Calma</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Session Info Panel -->
+        <div class="session-info-panel">
+            <div class="session-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Durata Sessione</span>
+                    <span class="stat-value" id="sessionDuration">00:00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Dati Raccolti</span>
+                    <span class="stat-value" id="dataPointsCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Stato Autista</span>
+                    <span class="stat-value" id="driverStatus">{% if driver %}{{ driver.monitoring_status.value }}{% else %}Sconosciuto{% endif %}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Classificazione</span>
+                    <span class="stat-value" id="driverClassification">{% if driver %}{{ driver.classification.value }}{% else %}Sconosciuto{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Errore</h2>
+            <button class="modal-close" onclick="closeErrorModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p id="errorMessage">Si è verificato un errore.</p>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="closeErrorModal()">OK</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block page_init_js %}
+// Monitor page specific initialization
+const driverId = {{ driver.id if driver else 'null' }};
+let isMonitoring = false;
+let webcamStream = null;
+let emotionChart = null;
+let emotionData = [];
+let sessionStartTime = null;
+let dataPointsCount = 0;
+let updateInterval = null;
+
+// Initialize monitoring page
+initializeMonitoringPage();
+
+async function initializeMonitoringPage() {
+    if (!driverId) {
+        showError('ID autista non valido');
+        return;
+    }
+    
+    setupWebcam();
+    setupEmotionChart();
+    setupEventListeners();
+    
+    // Load driver data
+    await loadDriverData();
+}
+
+function setupEventListeners() {
+    // Start/Stop monitoring button
+    document.getElementById('startStopBtn').addEventListener('click', toggleMonitoring);
+    
+    // Chart controls
+    document.getElementById('pauseChart').addEventListener('click', toggleChartPause);
+    document.getElementById('clearChart').addEventListener('click', clearChart);
+    
+    // Emotion overlay toggle
+    document.getElementById('toggleEmotionOverlay').addEventListener('click', toggleEmotionOverlay);
+}
+
+async function setupWebcam() {
+    const video = document.getElementById('webcamVideo');
+    const overlay = document.getElementById('webcamOverlay');
+    const statusIndicator = document.getElementById('webcamStatus');
+    const statusText = document.getElementById('webcamStatusText');
+    const messageText = document.getElementById('webcamMessageText');
+    
+    try {
+        messageText.textContent = 'Richiesta accesso alla webcam...';
+        
+        webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = webcamStream;
+        
+        video.onloadedmetadata = () => {
+            overlay.classList.add('hidden');
+            statusIndicator.className = 'status-indicator status-online';
+            statusText.textContent = 'Connessa';
+        };
+        
+    } catch (error) {
+        console.error('Error accessing webcam:', error);
+        
+        let errorMessage = 'Impossibile accedere alla webcam.';
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Accesso alla webcam negato. Controlla le autorizzazioni del browser.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage = 'Nessuna webcam trovata sul dispositivo.';
+        }
+        
+        messageText.textContent = errorMessage;
+        statusIndicator.className = 'status-indicator status-offline';
+        statusText.textContent = 'Errore';
+    }
+}
+
+function setupEmotionChart() {
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+    
+    emotionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Stress',
+                    data: [],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: 'Focus',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: 'Calma',
+                    data: [],
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 200
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            }
+        }
+    });
+}
+
+async function loadDriverData() {
+    try {
+        const response = await fetch(`/api/drivers/${driverId}/monitor`);
+        const result = await response.json();
+        
+        if (result.success) {
+            updateDriverInfo(result.data.driver);
+        } else {
+            showError('Errore nel caricamento dei dati dell\'autista: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error loading driver data:', error);
+        showError('Errore di connessione');
+    }
+}
+
+function updateDriverInfo(driver) {
+    document.getElementById('driverStatus').textContent = driver.monitoringStatus;
+    document.getElementById('driverClassification').textContent = driver.classification;
+}
+
+async function toggleMonitoring() {
+    if (isMonitoring) {
+        await stopMonitoring();
+    } else {
+        await startMonitoring();
+    }
+}
+
+async function startMonitoring() {
+    try {
+        const response = await fetch(`/api/drivers/${driverId}/monitor/start`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            isMonitoring = true;
+            sessionStartTime = Date.now();
+            dataPointsCount = 0;
+            
+            updateMonitoringUI();
+            startDataCollection();
+            
+            showFlashMessage('Monitoraggio avviato con successo', 'success');
+        } else {
+            showError('Errore nell\'avvio del monitoraggio: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error starting monitoring:', error);
+        showError('Errore di connessione nell\'avvio del monitoraggio');
+    }
+}
+
+async function stopMonitoring() {
+    try {
+        const response = await fetch(`/api/drivers/${driverId}/monitor/stop`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            isMonitoring = false;
+            sessionStartTime = null;
+            
+            updateMonitoringUI();
+            stopDataCollection();
+            
+            showFlashMessage('Monitoraggio interrotto', 'info');
+        } else {
+            showError('Errore nell\'interruzione del monitoraggio: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error stopping monitoring:', error);
+        showError('Errore di connessione nell\'interruzione del monitoraggio');
+    }
+}
+
+function updateMonitoringUI() {
+    const button = document.getElementById('startStopBtn');
+    const buttonText = document.getElementById('startStopText');
+    const startIcon = button.querySelector('.start-icon');
+    const stopIcon = button.querySelector('.stop-icon');
+    
+    if (isMonitoring) {
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-danger');
+        buttonText.textContent = 'Interrompi Monitoraggio';
+        startIcon.classList.add('hidden');
+        stopIcon.classList.remove('hidden');
+        
+        document.getElementById('emotionOverlay').classList.remove('hidden');
+    } else {
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
+        buttonText.textContent = 'Avvia Monitoraggio';
+        startIcon.classList.remove('hidden');
+        stopIcon.classList.add('hidden');
+        
+        document.getElementById('emotionOverlay').classList.add('hidden');
+    }
+}
+
+function startDataCollection() {
+    updateInterval = setInterval(async () => {
+        if (isMonitoring) {
+            await collectEmotionData();
+            updateSessionStats();
+        }
+    }, 3000); // Update every 3 seconds
+}
+
+function stopDataCollection() {
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+    }
+}
+
+async function collectEmotionData() {
+    try {
+        const response = await fetch(`/api/drivers/${driverId}/monitor/data`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const data = result.data;
+            dataPointsCount++;
+            
+            // Update chart
+            addDataToChart(data);
+            
+            // Update overlay indicators
+            updateEmotionIndicators(data);
+        }
+    } catch (error) {
+        console.error('Error collecting emotion data:', error);
+    }
+}
+
+function addDataToChart(data) {
+    const maxDataPoints = 20;
+    
+    // Add new data point
+    emotionChart.data.labels.push(data.time);
+    emotionChart.data.datasets[0].data.push(data.stress);
+    emotionChart.data.datasets[1].data.push(data.focus);
+    emotionChart.data.datasets[2].data.push(data.calm);
+    
+    // Remove old data points if we have too many
+    if (emotionChart.data.labels.length > maxDataPoints) {
+        emotionChart.data.labels.shift();
+        emotionChart.data.datasets.forEach(dataset => {
+            dataset.data.shift();
+        });
+    }
+    
+    emotionChart.update('none');
+}
+
+function updateEmotionIndicators(data) {
+    // Update stress indicator
+    document.getElementById('stressBar').style.width = `${data.stress}%`;
+    document.getElementById('stressValue').textContent = `${Math.round(data.stress)}%`;
+    
+    // Update focus indicator
+    document.getElementById('focusBar').style.width = `${data.focus}%`;
+    document.getElementById('focusValue').textContent = `${Math.round(data.focus)}%`;
+    
+    // Update calm indicator
+    document.getElementById('calmBar').style.width = `${data.calm}%`;
+    document.getElementById('calmValue').textContent = `${Math.round(data.calm)}%`;
+}
+
+function updateSessionStats() {
+    if (sessionStartTime) {
+        const duration = Date.now() - sessionStartTime;
+        const hours = Math.floor(duration / 3600000);
+        const minutes = Math.floor((duration % 3600000) / 60000);
+        const seconds = Math.floor((duration % 60000) / 1000);
+        
+        const formattedDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        document.getElementById('sessionDuration').textContent = formattedDuration;
+    }
+    
+    document.getElementById('dataPointsCount').textContent = dataPointsCount;
+}
+
+function toggleChartPause() {
+    const button = document.getElementById('pauseChart');
+    
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+        button.innerHTML = `
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5,3 19,12 5,21 5,3"></polygon>
+            </svg>
+            Riprendi
+        `;
+    } else if (isMonitoring) {
+        startDataCollection();
+        button.innerHTML = `
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            Pausa
+        `;
+    }
+}
+
+function clearChart() {
+    emotionChart.data.labels = [];
+    emotionChart.data.datasets.forEach(dataset => {
+        dataset.data = [];
+    });
+    emotionChart.update();
+    
+    dataPointsCount = 0;
+    document.getElementById('dataPointsCount').textContent = '0';
+}
+
+function toggleEmotionOverlay() {
+    const overlay = document.getElementById('emotionOverlay');
+    overlay.classList.toggle('hidden');
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorModal').classList.remove('hidden');
+}
+
+function closeErrorModal() {
+    document.getElementById('errorModal').classList.add('hidden');
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+    }
+    
+    if (isMonitoring) {
+        stopMonitoring();
+    }
+});
+{% endblock %}

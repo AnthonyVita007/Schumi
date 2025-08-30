@@ -1,0 +1,92 @@
+/*
+Chart Component Styles
+Additional styles for chart components in the monitoring page
+*/
+
+/* Chart.js overrides */
+.emotion-chart {
+  background-color: transparent !important;
+}
+
+/* Chart container specific styles */
+.chart-container {
+  position: relative;
+  background-color: #fafafa;
+  border-radius: var(--radius-md);
+}
+
+.chart-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 49%, rgba(46, 204, 113, 0.03) 50%, transparent 51%);
+  pointer-events: none;
+  border-radius: var(--radius-md);
+}
+
+/* Custom chart tooltips */
+.chartjs-tooltip {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  color: white !important;
+  font-family: var(--font-family) !important;
+  font-size: var(--font-size-sm) !important;
+  padding: var(--spacing-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.chartjs-tooltip-key {
+  background-color: transparent !important;
+  border-width: 2px !important;
+  margin-right: var(--spacing-sm) !important;
+}
+
+/* Chart responsive behavior */
+@media (max-width: 768px) {
+  .chart-container {
+    height: 300px !important;
+  }
+  
+  .chart-legend {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+}
+
+/* Chart loading state */
+.chart-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.chart-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--color-error);
+  z-index: 10;
+}
+
+/* Animation for chart updates */
+.chart-updating {
+  opacity: 0.8;
+  transition: opacity var(--transition-fast);
+}
+
+/* Custom grid lines */
+.emotion-chart .chartjs-render-monitor {
+  background-image: 
+    linear-gradient(90deg, rgba(46, 204, 113, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(46, 204, 113, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}

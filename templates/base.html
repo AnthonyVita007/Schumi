@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema di Gestione e Valutazione Autisti{% endblock %}</title>
+    
+    <!-- CSS Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Additional CSS for specific pages -->
+    {% block additional_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="nav-content">
+                <div class="logo">
+                    <a href="/" class="logo-link">
+                        Driver<span class="logo-light">System</span>
+                    </a>
+                </div>
+                <div class="nav-menu">
+                    <a href="/" class="nav-link {{ 'active' if request.endpoint == 'main.landing_page' }}">
+                        Home
+                    </a>
+                    <a href="/drivers" class="nav-link {{ 'active' if request.endpoint == 'main.drivers_page' }}">
+                        Autisti
+                    </a>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+            </div>
+            
+            <!-- Mobile navigation menu -->
+            <div class="mobile-nav" id="mobileNav">
+                <a href="/" class="mobile-nav-link">Home</a>
+                <a href="/drivers" class="mobile-nav-link">Autisti</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Caricamento...</p>
+            </div>
+        </div>
+        
+        <!-- Flash messages area -->
+        <div id="flashMessages" class="flash-messages-container"></div>
+        
+        <!-- Page specific content -->
+        <div class="page-container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Sistema di Gestione Autisti</h4>
+                    <p>Piattaforma integrata per la registrazione, analisi e monitoraggio delle performance degli autisti.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Funzionalità</h4>
+                    <ul>
+                        <li>Registrazione autisti</li>
+                        <li>Analisi dati simulazione</li>
+                        <li>Classificazione automatica</li>
+                        <li>Monitoraggio real-time</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Informazioni</h4>
+                    <p>&copy; 2024 Schumi Project</p>
+                    <p>Sviluppato con Flask e tecnologie moderne</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Core JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Page specific JavaScript -->
+    {% block additional_js %}{% endblock %}
+    
+    <!-- Initialize application -->
+    <script>
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize global features
+            initializeApp();
+            
+            // Initialize page-specific features
+            {% block page_init_js %}{% endblock %}
+        });
+    </script>
+</body>
+</html>

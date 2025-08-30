@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Gestione Autisti - Sistema di Gestione e Valutazione Autisti{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="page-header-content">
+            <h1 class="page-title">Elenco Autisti</h1>
+            <button id="addDriverBtn" class="btn btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Aggiungi Autista
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Drivers Content -->
+<div class="drivers-content">
+    <div class="container">
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Cerca autisti per nome..." class="search-input">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+            
+            <div class="filter-controls">
+                <select id="classificationFilter" class="filter-select">
+                    <option value="">Tutte le classificazioni</option>
+                    <option value="Non Classificato">Non Classificato</option>
+                    <option value="Principiante">Principiante</option>
+                    <option value="Efficiente">Efficiente</option>
+                    <option value="Esperto">Esperto</option>
+                </select>
+                
+                <select id="statusFilter" class="filter-select">
+                    <option value="">Tutti gli stati</option>
+                    <option value="Offline">Offline</option>
+                    <option value="Online">Online</option>
+                    <option value="In Corso">In Corso</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Drivers Grid -->
+        <div id="driversGrid" class="drivers-grid">
+            <!-- Driver cards will be dynamically loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state hidden">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <line x1="20" y1="8" x2="20" y2="14"></line>
+                    <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+            </div>
+            <h3>Nessun autista trovato</h3>
+            <p>Aggiungine uno per iniziare o modifica i filtri di ricerca.</p>
+            <button class="btn btn-primary" onclick="openAddDriverModal()">
+                Aggiungi il primo autista
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Driver Modal -->
+<div id="addDriverModal" class="modal hidden">
+    <div class="modal-overlay" onclick="closeAddDriverModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Aggiungi Nuovo Autista</h2>
+            <button class="modal-close" onclick="closeAddDriverModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="addDriverForm" class="modal-form">
+            <div class="form-group">
+                <label for="firstName" class="form-label">Nome *</label>
+                <input type="text" id="firstName" name="firstName" class="form-input" required>
+                <div class="form-error" id="firstNameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName" class="form-label">Cognome *</label>
+                <input type="text" id="lastName" name="lastName" class="form-input" required>
+                <div class="form-error" id="lastNameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="simulationFile" class="form-label">File Simulazione (CSV) *</label>
+                <div class="file-input-container">
+                    <input type="file" id="simulationFile" name="simulationFile" accept=".csv" class="file-input" required>
+                    <label for="simulationFile" class="file-input-label">
+                        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10,9 9,9 8,9"></polyline>
+                        </svg>
+                        <span id="fileLabel">Seleziona file CSV</span>
+                    </label>
+                </div>
+                <div class="form-help">Solo file CSV sono accettati (max 16MB)</div>
+                <div class="form-error" id="simulationFileError"></div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAddDriverModal()">
+                    Annulla
+                </button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="submitText">Aggiungi Autista</span>
+                    <span id="submitSpinner" class="submit-spinner hidden">
+                        <div class="spinner-small"></div>
+                        Aggiungendo...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Driver Card Template (Hidden, used for cloning) -->
+<template id="driverCardTemplate">
+    <div class="driver-card">
+        <div class="driver-card-header">
+            <div class="driver-info">
+                <h3 class="driver-name"></h3>
+                <div class="driver-meta">
+                    <span class="driver-id"></span>
+                </div>
+            </div>
+            <div class="driver-status">
+                <span class="status-indicator"></span>
+                <span class="status-text"></span>
+            </div>
+        </div>
+        
+        <div class="driver-card-body">
+            <div class="classification-badge">
+                <span class="classification-text"></span>
+            </div>
+            
+            <div class="driver-file-info">
+                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                </svg>
+                <span class="file-name"></span>
+            </div>
+        </div>
+        
+        <div class="driver-card-actions">
+            <button class="btn btn-secondary btn-sm classify-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                </svg>
+                <span class="classify-text">Classifica</span>
+                <span class="classify-spinner hidden">
+                    <div class="spinner-small"></div>
+                    Classificando...
+                </span>
+            </button>
+            
+            <a href="#" class="btn btn-primary btn-sm monitor-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                Monitora
+            </a>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block page_init_js %}
+// Drivers page specific initialization
+let driversData = [];
+let filteredDrivers = [];
+
+// Initialize drivers page
+initializeDriversPage();
+
+async function initializeDriversPage() {
+    await loadDrivers();
+    setupEventListeners();
+    setupFormValidation();
+}
+
+function setupEventListeners() {
+    // Add driver button
+    document.getElementById('addDriverBtn').addEventListener('click', openAddDriverModal);
+    
+    // Search input
+    document.getElementById('searchInput').addEventListener('input', filterDrivers);
+    
+    // Filter selects
+    document.getElementById('classificationFilter').addEventListener('change', filterDrivers);
+    document.getElementById('statusFilter').addEventListener('change', filterDrivers);
+    
+    // Form submission
+    document.getElementById('addDriverForm').addEventListener('submit', handleAddDriver);
+    
+    // File input change
+    document.getElementById('simulationFile').addEventListener('change', handleFileSelect);
+}
+
+async function loadDrivers() {
+    try {
+        showLoading(true);
+        const response = await fetch('/api/drivers');
+        const result = await response.json();
+        
+        if (result.success) {
+            driversData = result.data;
+            filteredDrivers = [...driversData];
+            renderDrivers();
+        } else {
+            showFlashMessage('Errore nel caricamento degli autisti: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error loading drivers:', error);
+        showFlashMessage('Errore di connessione durante il caricamento degli autisti', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+function renderDrivers() {
+    const grid = document.getElementById('driversGrid');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (filteredDrivers.length === 0) {
+        grid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    grid.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    
+    // Clear existing cards
+    grid.innerHTML = '';
+    
+    // Create driver cards
+    filteredDrivers.forEach(driver => {
+        const card = createDriverCard(driver);
+        grid.appendChild(card);
+    });
+}
+
+function createDriverCard(driver) {
+    const template = document.getElementById('driverCardTemplate');
+    const card = template.content.cloneNode(true);
+    
+    // Set driver data
+    card.querySelector('.driver-name').textContent = `${driver.firstName} ${driver.lastName}`;
+    card.querySelector('.driver-id').textContent = `ID: ${driver.id}`;
+    
+    // Set status
+    const statusIndicator = card.querySelector('.status-indicator');
+    const statusText = card.querySelector('.status-text');
+    statusIndicator.className = `status-indicator status-${driver.monitoringStatus.toLowerCase().replace(' ', '-')}`;
+    statusText.textContent = driver.monitoringStatus;
+    
+    // Set classification
+    const classificationBadge = card.querySelector('.classification-badge');
+    const classificationText = card.querySelector('.classification-text');
+    classificationText.textContent = driver.classification;
+    classificationBadge.className = `classification-badge classification-${driver.classification.toLowerCase().replace(' ', '-')}`;
+    
+    // Set file info
+    card.querySelector('.file-name').textContent = driver.simulationFile || 'Nessun file';
+    
+    // Set up action buttons
+    const classifyBtn = card.querySelector('.classify-btn');
+    const monitorBtn = card.querySelector('.monitor-btn');
+    
+    classifyBtn.addEventListener('click', () => classifyDriver(driver.id, classifyBtn));
+    monitorBtn.href = `/monitor/${driver.id}`;
+    
+    // Store driver ID on card element
+    const cardElement = card.querySelector('.driver-card');
+    cardElement.dataset.driverId = driver.id;
+    
+    return card;
+}
+
+function filterDrivers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const classificationFilter = document.getElementById('classificationFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    filteredDrivers = driversData.filter(driver => {
+        const matchesSearch = !searchTerm || 
+            `${driver.firstName} ${driver.lastName}`.toLowerCase().includes(searchTerm);
+        
+        const matchesClassification = !classificationFilter || 
+            driver.classification === classificationFilter;
+        
+        const matchesStatus = !statusFilter || 
+            driver.monitoringStatus === statusFilter;
+        
+        return matchesSearch && matchesClassification && matchesStatus;
+    });
+    
+    renderDrivers();
+}
+
+async function classifyDriver(driverId, buttonElement) {
+    try {
+        // Update button state
+        const classifyText = buttonElement.querySelector('.classify-text');
+        const classifySpinner = buttonElement.querySelector('.classify-spinner');
+        
+        classifyText.classList.add('hidden');
+        classifySpinner.classList.remove('hidden');
+        buttonElement.disabled = true;
+        
+        const response = await fetch(`/api/drivers/${driverId}/classify`);
+        const result = await response.json();
+        
+        if (result.success) {
+            showFlashMessage(`Classificazione completata: ${result.data.classification}`, 'success');
+            // Reload drivers to get updated data
+            await loadDrivers();
+        } else {
+            showFlashMessage('Errore nella classificazione: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error classifying driver:', error);
+        showFlashMessage('Errore di connessione durante la classificazione', 'error');
+    } finally {
+        // Reset button state
+        const classifyText = buttonElement.querySelector('.classify-text');
+        const classifySpinner = buttonElement.querySelector('.classify-spinner');
+        
+        classifyText.classList.remove('hidden');
+        classifySpinner.classList.add('hidden');
+        buttonElement.disabled = false;
+    }
+}
+
+function openAddDriverModal() {
+    document.getElementById('addDriverModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddDriverModal() {
+    document.getElementById('addDriverModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    
+    // Reset form
+    document.getElementById('addDriverForm').reset();
+    clearFormErrors();
+    document.getElementById('fileLabel').textContent = 'Seleziona file CSV';
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    const label = document.getElementById('fileLabel');
+    
+    if (file) {
+        label.textContent = file.name;
+    } else {
+        label.textContent = 'Seleziona file CSV';
+    }
+}
+
+async function handleAddDriver(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Clear previous errors
+    clearFormErrors();
+    
+    // Update submit button state
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const submitSpinner = document.getElementById('submitSpinner');
+    
+    submitText.classList.add('hidden');
+    submitSpinner.classList.remove('hidden');
+    submitBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/drivers', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showFlashMessage(result.message || 'Autista aggiunto con successo', 'success');
+            closeAddDriverModal();
+            await loadDrivers(); // Reload the drivers list
+        } else {
+            showFlashMessage('Errore: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error adding driver:', error);
+        showFlashMessage('Errore di connessione durante l\'aggiunta dell\'autista', 'error');
+    } finally {
+        // Reset submit button state
+        submitText.classList.remove('hidden');
+        submitSpinner.classList.add('hidden');
+        submitBtn.disabled = false;
+    }
+}
+
+function setupFormValidation() {
+    const form = document.getElementById('addDriverForm');
+    const inputs = form.querySelectorAll('input[required]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', validateField);
+        input.addEventListener('input', clearFieldError);
+    });
+}
+
+function validateField(event) {
+    const field = event.target;
+    const value = field.value.trim();
+    
+    switch (field.name) {
+        case 'firstName':
+        case 'lastName':
+            if (!value) {
+                showFieldError(field.name, 'Questo campo è obbligatorio');
+            } else if (value.length < 2) {
+                showFieldError(field.name, 'Deve contenere almeno 2 caratteri');
+            }
+            break;
+        case 'simulationFile':
+            if (!field.files[0]) {
+                showFieldError(field.name, 'Seleziona un file CSV');
+            }
+            break;
+    }
+}
+
+function showFieldError(fieldName, message) {
+    const errorElement = document.getElementById(fieldName + 'Error');
+    if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.classList.add('visible');
+    }
+}
+
+function clearFieldError(event) {
+    const fieldName = event.target.name;
+    const errorElement = document.getElementById(fieldName + 'Error');
+    if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.classList.remove('visible');
+    }
+}
+
+function clearFormErrors() {
+    const errorElements = document.querySelectorAll('.form-error');
+    errorElements.forEach(element => {
+        element.textContent = '';
+        element.classList.remove('visible');
+    });
+}
+{% endblock %}

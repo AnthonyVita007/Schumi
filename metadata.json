@@ -1,7 +1,0 @@
-{
-  "name": "Driver Management and Evaluation",
-  "description": "A web application for managing and evaluating company drivers, including performance analysis and real-time monitoring.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}

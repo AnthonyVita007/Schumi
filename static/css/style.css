@@ -464,6 +464,10 @@ body {
   overflow-y: auto;
 }
 
+.modal-content-large {
+  max-width: 720px;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -510,6 +514,66 @@ body {
   justify-content: flex-end;
   padding: var(--spacing-lg);
   border-top: 1px solid var(--color-accent);
+}
+
+/* ===== DRIVER DETAILS MODAL ===== */
+.driver-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+  .driver-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.driver-details-left h3,
+.driver-details-right h3 {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-dark);
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: var(--spacing-sm);
+}
+
+.info-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.info-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-light);
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  display: block;
+  font-size: var(--font-size-base);
+  color: var(--color-text-dark);
+  font-weight: 500;
+}
+
+.info-value.status-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.info-value.file-info {
+  font-family: 'Courier New', monospace;
+  font-size: var(--font-size-sm);
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent);
 }
 
 /* ===== LOADING & SPINNER ===== */
@@ -1049,6 +1113,15 @@ body {
   flex-direction: column;
 }
 
+.driver-card.driver-card-clickable {
+  cursor: pointer;
+}
+
+.driver-card.driver-card-clickable:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .driver-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
@@ -1101,6 +1174,22 @@ body {
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-light);
+}
+
+/* Status badge variants for modal info display */
+.status-badge.status-online {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.status-badge.status-offline {
+  background-color: #F3F4F6;
+  color: #374151;
+}
+
+.status-badge.status-in-corso {
+  background-color: #DBEAFE;
+  color: #1E40AF;
 }
 
 .driver-card-body {

@@ -19,6 +19,7 @@ from flask import current_app
 
 from . import db
 from .models import Driver, Classification, MonitoringStatus, SimulationData, ClassificationResult
+from .config import Config
 
 class DriverService:
     """
@@ -160,6 +161,84 @@ class DriverService:
         db.session.commit()
         
         return True
+    
+    @staticmethod
+    def update_driver(driver_id: int, first_name: str = None, last_name: str = None, simulation_file=None) -> Driver:
+        """
+        Update a driver's information.
+        
+        Args:
+            driver_id (int): ID of the driver to update
+            first_name (str, optional): New first name
+            last_name (str, optional): New last name
+            simulation_file (FileStorage, optional): New simulation CSV file
+            
+        Returns:
+            Driver: Updated driver object
+            
+        Raises:
+            ValueError: If driver not found or invalid data provided
+        """
+        driver = Driver.query.get(driver_id)
+        if not driver:
+            raise ValueError(f"Autista con ID {driver_id} non trovato")
+        
+        # Update names if provided
+        if first_name is not None:
+            first_name = first_name.strip().title()
+            if not first_name:
+                raise ValueError("Il nome non può essere vuoto")
+            if len(first_name) < 2:
+                raise ValueError("Il nome deve contenere almeno 2 caratteri")
+            
+            # Check for duplicate drivers (excluding current driver)
+            existing_driver = Driver.query.filter(
+                Driver.first_name == first_name,
+                Driver.last_name == (last_name.strip().title() if last_name else driver.last_name),
+                Driver.id != driver_id
+            ).first()
+            
+            if existing_driver:
+                raise ValueError(f"Un autista con nome {first_name} {last_name or driver.last_name} esiste già")
+            
+            driver.first_name = first_name
+        
+        if last_name is not None:
+            last_name = last_name.strip().title()
+            if not last_name:
+                raise ValueError("Il cognome non può essere vuoto")
+            if len(last_name) < 2:
+                raise ValueError("Il cognome deve contenere almeno 2 caratteri")
+            
+            # Check for duplicate drivers (excluding current driver)
+            existing_driver = Driver.query.filter(
+                Driver.first_name == (first_name.strip().title() if first_name else driver.first_name),
+                Driver.last_name == last_name,
+                Driver.id != driver_id
+            ).first()
+            
+            if existing_driver:
+                raise ValueError(f"Un autista con nome {first_name or driver.first_name} {last_name} esiste già")
+            
+            driver.last_name = last_name
+        
+        # Handle simulation file replacement if provided
+        if simulation_file:
+            # Delete old file if it exists
+            if driver.simulation_file:
+                FileUploadService.delete_simulation_file(driver.simulation_file)
+            
+            # Save new file
+            simulation_filename = FileUploadService.save_simulation_file(
+                simulation_file, driver.first_name, driver.last_name
+            )
+            driver.simulation_file = simulation_filename
+            
+            # Process new simulation data
+            SimulationDataService.process_simulation_file(driver.id, simulation_filename)
+        
+        db.session.commit()
+        return driver
 
 class ClassificationService:
     """
@@ -369,7 +448,7 @@ class FileUploadService:
             raise ValueError("Nessun file selezionato")
         
         # Validate file extension
-        if not current_app.config['Config'].validate_file_extension(file.filename):
+        if not Config.validate_file_extension(file.filename):
             raise ValueError("Solo file CSV sono permessi")
         
         # Generate secure filename

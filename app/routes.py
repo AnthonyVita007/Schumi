@@ -154,7 +154,7 @@ def api_add_driver():
     """
     try:
         # Validate request content type
-        if not request.is_multipart:
+        if not (request.content_type and 'multipart/form-data' in request.content_type):
             raise BadRequest("Richiesta deve essere multipart/form-data")
         
         # Extract form data
@@ -245,6 +245,135 @@ def api_get_driver(driver_id):
         return jsonify({
             'success': False,
             'error': 'Errore nel recupero dell\'autista'
+        }), 500
+
+@main_bp.route('/api/drivers/<int:driver_id>', methods=['PUT', 'PATCH'])
+def api_update_driver(driver_id):
+    """
+    API endpoint to update a driver's information.
+    
+    Accepts JSON or multipart/form-data with driver information and optional simulation file.
+    Updates driver record and optionally processes a new uploaded CSV file.
+    
+    Args:
+        driver_id (int): ID of the driver to update
+    
+    Expected JSON Data (Content-Type: application/json):
+        {
+            "firstName": "NewFirstName",
+            "lastName": "NewLastName"
+        }
+    
+    Expected Form Data (Content-Type: multipart/form-data):
+        - firstName (str, optional): Driver's new first name
+        - lastName (str, optional): Driver's new last name  
+        - simulationFile (file, optional): New CSV file containing simulation data
+        
+    Returns:
+        Response: JSON response with updated driver data or error message
+        
+    Example Response:
+        {
+            "success": true,
+            "data": {
+                "id": 1,
+                "firstName": "Mario",
+                "lastName": "Rossi", 
+                "classification": "Efficiente",
+                "monitoringStatus": "Offline",
+                "simulationFile": "sim_mario_rossi_new.csv"
+            },
+            "message": "Autista aggiornato con successo"
+        }
+    """
+    try:
+        first_name = None
+        last_name = None
+        simulation_file = None
+        
+        # Handle JSON or form data
+        if request.is_json:
+            data = request.get_json()
+            first_name = data.get('firstName', '').strip() if data.get('firstName') else None
+            last_name = data.get('lastName', '').strip() if data.get('lastName') else None
+        else:
+            # Handle form data (potentially multipart with file)
+            first_name = request.form.get('firstName', '').strip() if request.form.get('firstName') else None
+            last_name = request.form.get('lastName', '').strip() if request.form.get('lastName') else None
+            simulation_file = request.files.get('simulationFile')
+        
+        # Validate that at least one field is being updated
+        if not any([first_name, last_name, simulation_file]):
+            return jsonify({
+                'success': False,
+                'error': 'Almeno un campo deve essere fornito per l\'aggiornamento'
+            }), 400
+        
+        # Update driver
+        updated_driver = DriverService.update_driver(
+            driver_id=driver_id,
+            first_name=first_name,
+            last_name=last_name,
+            simulation_file=simulation_file
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': updated_driver.to_dict(),
+            'message': 'Autista aggiornato con successo'
+        })
+        
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+        
+    except Exception as e:
+        current_app.logger.error(f"Error updating driver {driver_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Errore interno del server'
+        }), 500
+
+@main_bp.route('/api/drivers/<int:driver_id>', methods=['DELETE'])
+def api_delete_driver(driver_id):
+    """
+    API endpoint to delete a driver from the system.
+    
+    Deletes the driver record and any associated simulation files.
+    
+    Args:
+        driver_id (int): ID of the driver to delete
+        
+    Returns:
+        Response: JSON response confirming deletion or error message
+        
+    Example Response:
+        {
+            "success": true,
+            "message": "Autista eliminato con successo"
+        }
+    """
+    try:
+        success = DriverService.delete_driver(driver_id)
+        
+        if not success:
+            return jsonify({
+                'success': False,
+                'error': f'Autista con ID {driver_id} non trovato'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'message': 'Autista eliminato con successo'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting driver {driver_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Errore interno del server'
         }), 500
 
 @main_bp.route('/api/drivers/<int:driver_id>/classify', methods=['GET'])

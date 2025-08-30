@@ -144,7 +144,9 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 - **Visualizzazione**: Elenco autisti con informazioni essenziali
 - **Ricerca**: Filtro per nome, classificazione, stato monitoraggio
 - **Aggiunta**: Modal per registrazione nuovo autista con upload CSV
-- **Azioni**: Classificazione automatica e accesso al monitoraggio
+- **Dettagli**: Card autisti cliccabili per aprire modal dettagli/editing
+- **Azioni**: Nel modal dettagli: modifica nome/cognome, sostituzione file CSV, classificazione e eliminazione autista
+- **Monitoraggio**: Accesso diretto al monitoraggio tramite link nelle card
 
 ### **3. Monitoraggio (`/monitor/<driver_id>`)**
 - **Webcam**: Acquisizione video in tempo reale (richiede permessi browser)
@@ -158,8 +160,9 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 - `GET /api/drivers` - Lista tutti gli autisti
 - `POST /api/drivers` - Registra nuovo autista
 - `GET /api/drivers/<id>` - Dettagli autista specifico
-- `GET /api/drivers/<id>/classify` - Esegui classificazione
+- `PUT/PATCH /api/drivers/<id>` - Aggiorna informazioni autista
 - `DELETE /api/drivers/<id>` - Elimina autista
+- `GET /api/drivers/<id>/classify` - Esegui classificazione
 
 ### **Monitoraggio**
 - `GET /api/drivers/<id>/monitor` - Dati preparazione monitoraggio

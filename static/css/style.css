@@ -1639,6 +1639,9 @@ body {
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
+    width: 100%;
+    max-width: 1200px;
+    margin: var(--spacing-xl) auto;
 }
 
 .webcam-header {
@@ -1844,17 +1847,8 @@ body {
         gap: var(--spacing-md);
     }
     
-    .monitoring-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    .emotion-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-xs);
-    }
-    
-    .emotion-bar label {
-        min-width: auto;
+    .webcam-section {
+        margin: var(--spacing-lg) auto;
+        padding: var(--spacing-md);
     }
 }

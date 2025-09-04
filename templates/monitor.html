@@ -3,7 +3,7 @@
 {% block title %}Monitoraggio {% if driver %}{{ driver.first_name }} {{ driver.last_name }}{% endif %} - Sistema di Gestione Autisti{% endblock %}
 
 {% block additional_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+<!-- Removed chart.css since we're not using charts anymore -->
 {% endblock %}
 
 {% block content %}
@@ -69,6 +69,8 @@
                     
                     <div class="webcam-container">
                         <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
+                        <!-- Canvas overlay for face detection box and emotion label -->
+                        <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
                         <div id="webcamOverlay" class="webcam-overlay">
                             <div class="webcam-message">
                                 <div class="webcam-icon">
@@ -80,117 +82,9 @@
                                 <p id="webcamMessageText">Inizializzazione webcam...</p>
                             </div>
                         </div>
-                        
-                        <!-- Emotion Detection Overlay -->
-                        <div id="emotionOverlay" class="emotion-overlay hidden">
-                            <div class="emotion-indicators">
-                                <div class="emotion-indicator stress">
-                                    <span class="indicator-label">Stress</span>
-                                    <div class="indicator-bar">
-                                        <div class="indicator-fill" id="stressBar"></div>
-                                    </div>
-                                    <span class="indicator-value" id="stressValue">0%</span>
-                                </div>
-                                
-                                <div class="emotion-indicator focus">
-                                    <span class="indicator-label">Focus</span>
-                                    <div class="indicator-bar">
-                                        <div class="indicator-fill" id="focusBar"></div>
-                                    </div>
-                                    <span class="indicator-value" id="focusValue">0%</span>
-                                </div>
-                                
-                                <div class="emotion-indicator calm">
-                                    <span class="indicator-label">Calma</span>
-                                    <div class="indicator-bar">
-                                        <div class="indicator-fill" id="calmBar"></div>
-                                    </div>
-                                    <span class="indicator-value" id="calmValue">0%</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     
-                    <div class="webcam-controls">
-                        <button id="toggleEmotionOverlay" class="btn btn-secondary btn-sm">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            Mostra/Nascondi Indicatori
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Emotion Chart Section -->
-            <div class="chart-section">
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
-                            </svg>
-                            Analisi Emotiva in Tempo Reale
-                        </h2>
-                        <div class="chart-controls">
-                            <button id="pauseChart" class="btn btn-secondary btn-sm">
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="6" y="4" width="4" height="16"></rect>
-                                    <rect x="14" y="4" width="4" height="16"></rect>
-                                </svg>
-                                Pausa
-                            </button>
-                            <button id="clearChart" class="btn btn-secondary btn-sm">
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="1,4 1,10 7,10"></polyline>
-                                    <path d="M3.51,15a9,9,0,0,0,13.48,0,9,9,0,0,0,.5-13.38L7,12"></path>
-                                </svg>
-                                Reset
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-container">
-                        <canvas id="emotionChart" class="emotion-chart"></canvas>
-                    </div>
-                    
-                    <div class="chart-legend">
-                        <div class="legend-item stress">
-                            <span class="legend-color"></span>
-                            <span class="legend-label">Stress</span>
-                        </div>
-                        <div class="legend-item focus">
-                            <span class="legend-color"></span>
-                            <span class="legend-label">Focus</span>
-                        </div>
-                        <div class="legend-item calm">
-                            <span class="legend-color"></span>
-                            <span class="legend-label">Calma</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Session Info Panel -->
-        <div class="session-info-panel">
-            <div class="session-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Durata Sessione</span>
-                    <span class="stat-value" id="sessionDuration">00:00:00</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Dati Raccolti</span>
-                    <span class="stat-value" id="dataPointsCount">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Stato Autista</span>
-                    <span class="stat-value" id="driverStatus">{% if driver %}{{ driver.monitoring_status.value }}{% else %}Sconosciuto{% endif %}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Classificazione</span>
-                    <span class="stat-value" id="driverClassification">{% if driver %}{{ driver.classification.value }}{% else %}Sconosciuto{% endif %}</span>
+                    <!-- Removed webcam controls as they are no longer needed -->
                 </div>
             </div>
         </div>
@@ -221,7 +115,7 @@
 {% endblock %}
 
 {% block additional_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Removed Chart.js since we're not using charts anymore -->
 {% endblock %}
 
 {% block page_init_js %}
@@ -229,11 +123,11 @@
 const driverId = {{ driver.id if driver else 'null' }};
 let isMonitoring = false;
 let webcamStream = null;
-let emotionChart = null;
-let emotionData = [];
 let sessionStartTime = null;
 let dataPointsCount = 0;
 let updateInterval = null;
+let overlayCanvas = null;
+let overlayCtx = null;
 
 // Initialize monitoring page
 initializeMonitoringPage();
@@ -245,7 +139,7 @@ async function initializeMonitoringPage() {
     }
     
     setupWebcam();
-    setupEmotionChart();
+    setupOverlayCanvas();
     setupEventListeners();
     
     // Load driver data
@@ -255,13 +149,6 @@ async function initializeMonitoringPage() {
 function setupEventListeners() {
     // Start/Stop monitoring button
     document.getElementById('startStopBtn').addEventListener('click', toggleMonitoring);
-    
-    // Chart controls
-    document.getElementById('pauseChart').addEventListener('click', toggleChartPause);
-    document.getElementById('clearChart').addEventListener('click', clearChart);
-    
-    // Emotion overlay toggle
-    document.getElementById('toggleEmotionOverlay').addEventListener('click', toggleEmotionOverlay);
 }
 
 async function setupWebcam() {
@@ -299,74 +186,24 @@ async function setupWebcam() {
     }
 }
 
-function setupEmotionChart() {
-    const ctx = document.getElementById('emotionChart').getContext('2d');
+function setupOverlayCanvas() {
+    const video = document.getElementById('webcamVideo');
+    overlayCanvas = document.getElementById('overlayCanvas');
+    overlayCtx = overlayCanvas.getContext('2d');
     
-    emotionChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [
-                {
-                    label: 'Stress',
-                    data: [],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4,
-                    fill: false
-                },
-                {
-                    label: 'Focus',
-                    data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: false
-                },
-                {
-                    label: 'Calma',
-                    data: [],
-                    borderColor: '#22c55e',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    tension: 0.4,
-                    fill: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-                duration: 200
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.1)'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
-            }
+    // Set canvas dimensions to match video when video loads
+    video.addEventListener('loadedmetadata', () => {
+        overlayCanvas.width = video.videoWidth;
+        overlayCanvas.height = video.videoHeight;
+        overlayCanvas.style.width = video.offsetWidth + 'px';
+        overlayCanvas.style.height = video.offsetHeight + 'px';
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (video.videoWidth > 0) {
+            overlayCanvas.style.width = video.offsetWidth + 'px';
+            overlayCanvas.style.height = video.offsetHeight + 'px';
         }
     });
 }
@@ -538,11 +375,8 @@ async function captureAndAnalyzeFrame() {
             const data = result.data;
             dataPointsCount++;
             
-            // Update chart con i nuovi dati (AI o mock)
-            addDataToChart(data);
-            
-            // Update overlay indicators
-            updateEmotionIndicators(data);
+            // Update canvas overlay invece di chart
+            updateCanvasOverlay(data);
             
             // Log informazioni aggiuntive se disponibili dall'analisi AI
             if (data.emotion && data.inferenceMs) {
@@ -573,52 +407,69 @@ async function collectEmotionData() {
             const data = result.data;
             dataPointsCount++;
             
-            // Update chart
-            addDataToChart(data);
-            
-            // Update overlay indicators
-            updateEmotionIndicators(data);
+            // Update canvas overlay
+            updateCanvasOverlay(data);
         }
     } catch (error) {
         console.error('Error collecting emotion data:', error);
     }
 }
 
-function addDataToChart(data) {
-    const maxDataPoints = 20;
+function updateCanvasOverlay(data) {
+    if (!overlayCtx || !overlayCanvas) return;
     
-    // Add new data point
-    emotionChart.data.labels.push(data.time);
-    emotionChart.data.datasets[0].data.push(data.stress);
-    emotionChart.data.datasets[1].data.push(data.focus);
-    emotionChart.data.datasets[2].data.push(data.calm);
+    // Clear the canvas
+    overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
     
-    // Remove old data points if we have too many
-    if (emotionChart.data.labels.length > maxDataPoints) {
-        emotionChart.data.labels.shift();
-        emotionChart.data.datasets.forEach(dataset => {
-            dataset.data.shift();
-        });
+    // If there's a bounding box, draw it
+    if (data.bbox && data.bbox.x !== undefined) {
+        const { x, y, w, h } = data.bbox;
+        
+        // Draw bounding box rectangle
+        overlayCtx.strokeStyle = '#22c55e'; // Green color
+        overlayCtx.lineWidth = 2;
+        overlayCtx.strokeRect(x, y, w, h);
+        
+        // Draw emotion label with confidence if available
+        if (data.emotion) {
+            let label = data.emotion;
+            
+            // Add confidence percentage if probs are available
+            if (data.probs) {
+                const maxProb = Math.max(...Object.values(data.probs));
+                const confidence = Math.round(maxProb * 100);
+                label += ` (${confidence}%)`;
+            }
+            
+            // Style the text
+            overlayCtx.fillStyle = '#22c55e';
+            overlayCtx.font = 'bold 16px Arial';
+            overlayCtx.textAlign = 'left';
+            
+            // Draw text background for better readability
+            const textMetrics = overlayCtx.measureText(label);
+            const textHeight = 20;
+            const padding = 4;
+            
+            overlayCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            overlayCtx.fillRect(
+                x, 
+                y - textHeight - padding, 
+                textMetrics.width + padding * 2, 
+                textHeight + padding
+            );
+            
+            // Draw the text
+            overlayCtx.fillStyle = '#ffffff';
+            overlayCtx.fillText(label, x + padding, y - padding);
+        }
     }
-    
-    emotionChart.update('none');
-}
-
-function updateEmotionIndicators(data) {
-    // Update stress indicator
-    document.getElementById('stressBar').style.width = `${data.stress}%`;
-    document.getElementById('stressValue').textContent = `${Math.round(data.stress)}%`;
-    
-    // Update focus indicator
-    document.getElementById('focusBar').style.width = `${data.focus}%`;
-    document.getElementById('focusValue').textContent = `${Math.round(data.focus)}%`;
-    
-    // Update calm indicator
-    document.getElementById('calmBar').style.width = `${data.calm}%`;
-    document.getElementById('calmValue').textContent = `${Math.round(data.calm)}%`;
+    // If no bbox, the canvas remains clear (no face detected)
 }
 
 function updateSessionStats() {
+    // Session duration and data points are no longer displayed in UI
+    // but we keep the counter for internal tracking
     if (sessionStartTime) {
         const duration = Date.now() - sessionStartTime;
         const hours = Math.floor(duration / 3600000);
@@ -626,51 +477,11 @@ function updateSessionStats() {
         const seconds = Math.floor((duration % 60000) / 1000);
         
         const formattedDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        document.getElementById('sessionDuration').textContent = formattedDuration;
-    }
-    
-    document.getElementById('dataPointsCount').textContent = dataPointsCount;
-}
-
-function toggleChartPause() {
-    const button = document.getElementById('pauseChart');
-    
-    if (updateInterval) {
-        clearInterval(updateInterval);
-        updateInterval = null;
-        button.innerHTML = `
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="5,3 19,12 5,21 5,3"></polygon>
-            </svg>
-            Riprendi
-        `;
-    } else if (isMonitoring) {
-        startDataCollection();
-        button.innerHTML = `
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-            Pausa
-        `;
+        console.log(`Session duration: ${formattedDuration}, Data points: ${dataPointsCount}`);
     }
 }
 
-function clearChart() {
-    emotionChart.data.labels = [];
-    emotionChart.data.datasets.forEach(dataset => {
-        dataset.data = [];
-    });
-    emotionChart.update();
-    
-    dataPointsCount = 0;
-    document.getElementById('dataPointsCount').textContent = '0';
-}
-
-function toggleEmotionOverlay() {
-    const overlay = document.getElementById('emotionOverlay');
-    overlay.classList.toggle('hidden');
-}
+// Removed chart-related functions as they're no longer needed
 
 function showError(message) {
     document.getElementById('errorMessage').textContent = message;

@@ -1589,3 +1589,272 @@ body {
   justify-content: center;
   flex-wrap: wrap;
 }
+
+/* ===== MONITOR PAGE STYLES ===== */
+
+/* Driver Info Panel */
+.driver-info-panel {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: white;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.info-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.info-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+}
+
+/* Monitoring Layout */
+.monitoring-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+    .monitoring-layout {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Webcam Section */
+.webcam-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.webcam-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.webcam-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-dark);
+}
+
+.webcam-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-text-muted);
+}
+
+.status-indicator.online {
+    background-color: var(--color-primary);
+}
+
+.status-indicator.offline {
+    background-color: var(--color-error);
+}
+
+.webcam-container {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.webcam-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.overlay-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.webcam-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.webcam-overlay.hidden {
+    display: none;
+}
+
+.webcam-message {
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.webcam-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto var(--spacing-md);
+    opacity: 0.5;
+}
+
+.webcam-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Emotion Overlay */
+.emotion-overlay {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.emotion-overlay.hidden {
+    display: none;
+}
+
+.emotion-content h3 {
+    margin: 0 0 var(--spacing-lg) 0;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-dark);
+}
+
+.emotion-indicators {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.emotion-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.emotion-bar label {
+    min-width: 60px;
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    color: var(--color-text-dark);
+}
+
+.bar-container {
+    flex: 1;
+    height: 20px;
+    background: var(--color-accent);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.stress-bar {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.focus-bar {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.calm-bar {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+/* Status and Classification Badges */
+.status-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--color-accent);
+    color: var(--color-text-muted);
+}
+
+.classification-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--color-primary);
+    color: white;
+}
+
+.classification-badge.classification-prudente {
+    background: var(--color-primary);
+}
+
+.classification-badge.classification-normale {
+    background: #3b82f6;
+}
+
+.classification-badge.classification-aggressivo {
+    background: #ef4444;
+}
+
+/* Driver Highlight */
+.driver-highlight {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .driver-info-panel {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .monitoring-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .emotion-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-xs);
+    }
+    
+    .emotion-bar label {
+        min-width: auto;
+    }
+}

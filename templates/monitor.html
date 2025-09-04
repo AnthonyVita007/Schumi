@@ -47,44 +47,60 @@
 </div>
 
 <!-- Monitoring Content -->
-<div class="monitoring-content">
-    <div class="container">
-        <div class="monitoring-grid">
-            <!-- Webcam Feed Section -->
+<div class="container">
+    <div class="monitoring-layout">
+        <div class="monitoring-sidebar">
             <div class="webcam-section">
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2 class="section-title">
-                            <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                                <circle cx="12" cy="13" r="4"></circle>
-                            </svg>
-                            Webcam Feed
-                        </h2>
-                        <div class="webcam-status">
-                            <span class="status-indicator" id="webcamStatus"></span>
-                            <span id="webcamStatusText">Inizializzazione...</span>
-                        </div>
+                <div class="webcam-header">
+                    <h3>Camera</h3>
+                    <div class="webcam-status">
+                        <span class="status-indicator" id="webcamStatus"></span>
+                        <span id="webcamStatusText">Inizializzazione...</span>
                     </div>
-                    
-                    <div class="webcam-container">
-                        <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
-                        <!-- Canvas overlay for face detection box and emotion label -->
-                        <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
-                        <div id="webcamOverlay" class="webcam-overlay">
-                            <div class="webcam-message">
-                                <div class="webcam-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                                        <circle cx="12" cy="13" r="4"></circle>
-                                    </svg>
-                                </div>
-                                <p id="webcamMessageText">Inizializzazione webcam...</p>
+                </div>
+                
+                <div class="webcam-container">
+                    <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
+                    <!-- Canvas overlay for face detection box and emotion label -->
+                    <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+                    <div id="webcamOverlay" class="webcam-overlay">
+                        <div class="webcam-message">
+                            <div class="webcam-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
                             </div>
+                            <p id="webcamMessageText">Inizializzazione webcam...</p>
                         </div>
                     </div>
-                    
-                    <!-- Removed webcam controls as they are no longer needed -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Emotion Overlay -->
+        <div id="emotionOverlay" class="emotion-overlay hidden">
+            <div class="emotion-content">
+                <h3>Stato Emotivo</h3>
+                <div class="emotion-indicators">
+                    <div class="emotion-bar">
+                        <label>Stress</label>
+                        <div class="bar-container">
+                            <div id="stressBar" class="bar stress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-bar">
+                        <label>Focus</label>
+                        <div class="bar-container">
+                            <div id="focusBar" class="bar focus-bar"></div>
+                        </div>
+                    </div>
+                    <div class="emotion-bar">
+                        <label>Calma</label>
+                        <div class="bar-container">
+                            <div id="calmBar" class="bar calm-bar"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -125,6 +141,7 @@ let isMonitoring = false;
 let webcamStream = null;
 let sessionStartTime = null;
 let dataPointsCount = 0;
+
 let updateInterval = null;
 let overlayCanvas = null;
 let overlayCtx = null;
@@ -141,9 +158,6 @@ async function initializeMonitoringPage() {
     setupWebcam();
     setupOverlayCanvas();
     setupEventListeners();
-    
-    // Load driver data
-    await loadDriverData();
 }
 
 function setupEventListeners() {
@@ -165,24 +179,25 @@ async function setupWebcam() {
         video.srcObject = webcamStream;
         
         video.onloadedmetadata = () => {
+            // Hide overlay when camera is ready
             overlay.classList.add('hidden');
-            statusIndicator.className = 'status-indicator status-online';
-            statusText.textContent = 'Connessa';
+            statusIndicator.classList.add('online');
+            statusText.textContent = 'Camera attiva';
+            messageText.textContent = '';
+        };
+        
+        video.onerror = (error) => {
+            console.error('Video error:', error);
+            statusIndicator.classList.add('offline');
+            statusText.textContent = 'Errore camera';
+            messageText.textContent = 'Errore nell\'accesso alla webcam';
         };
         
     } catch (error) {
         console.error('Error accessing webcam:', error);
-        
-        let errorMessage = 'Impossibile accedere alla webcam.';
-        if (error.name === 'NotAllowedError') {
-            errorMessage = 'Accesso alla webcam negato. Controlla le autorizzazioni del browser.';
-        } else if (error.name === 'NotFoundError') {
-            errorMessage = 'Nessuna webcam trovata sul dispositivo.';
-        }
-        
-        messageText.textContent = errorMessage;
-        statusIndicator.className = 'status-indicator status-offline';
-        statusText.textContent = 'Errore';
+        statusIndicator.classList.add('offline');
+        statusText.textContent = 'Camera non disponibile';
+        messageText.textContent = 'Impossibile accedere alla webcam. Controlla i permessi.';
     }
 }
 
@@ -191,10 +206,12 @@ function setupOverlayCanvas() {
     overlayCanvas = document.getElementById('overlayCanvas');
     overlayCtx = overlayCanvas.getContext('2d');
     
-    // Set canvas dimensions to match video when video loads
+    // Size canvas to video once metadata is available
     video.addEventListener('loadedmetadata', () => {
         overlayCanvas.width = video.videoWidth;
         overlayCanvas.height = video.videoHeight;
+        
+        // Match displayed size
         overlayCanvas.style.width = video.offsetWidth + 'px';
         overlayCanvas.style.height = video.offsetHeight + 'px';
     });
@@ -206,27 +223,6 @@ function setupOverlayCanvas() {
             overlayCanvas.style.height = video.offsetHeight + 'px';
         }
     });
-}
-
-async function loadDriverData() {
-    try {
-        const response = await fetch(`/api/drivers/${driverId}/monitor`);
-        const result = await response.json();
-        
-        if (result.success) {
-            updateDriverInfo(result.data.driver);
-        } else {
-            showError('Errore nel caricamento dei dati dell\'autista: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Error loading driver data:', error);
-        showError('Errore di connessione');
-    }
-}
-
-function updateDriverInfo(driver) {
-    document.getElementById('driverStatus').textContent = driver.monitoringStatus;
-    document.getElementById('driverClassification').textContent = driver.classification;
 }
 
 async function toggleMonitoring() {
@@ -319,7 +315,7 @@ function startDataCollection() {
             await captureAndAnalyzeFrame();
             updateSessionStats();
         }
-    }, 1000); // Update every 1 second (1 FPS) per specifiche - cambiabile facilmente
+    }, 1000); // 1 FPS
 }
 
 function stopDataCollection() {
@@ -375,7 +371,7 @@ async function captureAndAnalyzeFrame() {
             const data = result.data;
             dataPointsCount++;
             
-            // Update canvas overlay invece di chart
+            // Update canvas overlay
             updateCanvasOverlay(data);
             
             // Log informazioni aggiuntive se disponibili dall'analisi AI
@@ -430,66 +426,61 @@ function updateCanvasOverlay(data) {
         overlayCtx.lineWidth = 2;
         overlayCtx.strokeRect(x, y, w, h);
         
-        // Draw emotion label with confidence if available
+        // Draw emotion label above the box
         if (data.emotion) {
-            let label = data.emotion;
-            
-            // Add confidence percentage if probs are available
-            if (data.probs) {
-                const maxProb = Math.max(...Object.values(data.probs));
-                const confidence = Math.round(maxProb * 100);
-                label += ` (${confidence}%)`;
-            }
-            
-            // Style the text
             overlayCtx.fillStyle = '#22c55e';
-            overlayCtx.font = 'bold 16px Arial';
-            overlayCtx.textAlign = 'left';
-            
-            // Draw text background for better readability
-            const textMetrics = overlayCtx.measureText(label);
-            const textHeight = 20;
-            const padding = 4;
-            
-            overlayCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            overlayCtx.fillRect(
-                x, 
-                y - textHeight - padding, 
-                textMetrics.width + padding * 2, 
-                textHeight + padding
-            );
-            
-            // Draw the text
-            overlayCtx.fillStyle = '#ffffff';
-            overlayCtx.fillText(label, x + padding, y - padding);
+            overlayCtx.font = '16px Arial';
+            overlayCtx.fillText(data.emotion, x, y - 10);
         }
     }
-    // If no bbox, the canvas remains clear (no face detected)
+    
+    // Update emotion bars
+    updateEmotionBars(data);
+}
+
+function updateEmotionBars(data) {
+    const stressBar = document.getElementById('stressBar');
+    const focusBar = document.getElementById('focusBar');
+    const calmBar = document.getElementById('calmBar');
+    
+    if (stressBar && data.stress !== undefined) {
+        stressBar.style.width = (data.stress * 100) + '%';
+    }
+    if (focusBar && data.focus !== undefined) {
+        focusBar.style.width = (data.focus * 100) + '%';
+    }
+    if (calmBar && data.calm !== undefined) {
+        calmBar.style.width = (data.calm * 100) + '%';
+    }
 }
 
 function updateSessionStats() {
-    // Session duration and data points are no longer displayed in UI
-    // but we keep the counter for internal tracking
-    if (sessionStartTime) {
-        const duration = Date.now() - sessionStartTime;
-        const hours = Math.floor(duration / 3600000);
-        const minutes = Math.floor((duration % 3600000) / 60000);
-        const seconds = Math.floor((duration % 60000) / 1000);
-        
-        const formattedDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        console.log(`Session duration: ${formattedDuration}, Data points: ${dataPointsCount}`);
+    if (!sessionStartTime) return;
+    
+    const now = Date.now();
+    const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
+    
+    // Stats opzionali in console
+    console.log(`Session: ${sessionDuration}s, Data points: ${dataPointsCount}`);
+}
+
+function showError(message) {
+    const errorModal = document.getElementById('errorModal');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    if (errorMessage) {
+        errorMessage.textContent = message;
+    }
+    if (errorModal) {
+        errorModal.classList.remove('hidden');
     }
 }
 
-// Removed chart-related functions as they're no longer needed
-
-function showError(message) {
-    document.getElementById('errorMessage').textContent = message;
-    document.getElementById('errorModal').classList.remove('hidden');
-}
-
 function closeErrorModal() {
-    document.getElementById('errorModal').classList.add('hidden');
+    const errorModal = document.getElementById('errorModal');
+    if (errorModal) {
+        errorModal.classList.add('hidden');
+    }
 }
 
 // Cleanup on page unload
@@ -503,3 +494,4 @@ window.addEventListener('beforeunload', () => {
     }
 });
 {% endblock %}
+

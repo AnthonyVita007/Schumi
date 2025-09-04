@@ -37,6 +37,10 @@ class Config:
     DRIVERS_PER_PAGE = 20  # Pagination setting for drivers list
     MONITORING_UPDATE_INTERVAL = 3  # Seconds between monitoring data updates
     
+    # AI/ML configuration for emotion detection
+    EMOTION_MODEL_PATH = os.environ.get('EMOTION_MODEL_PATH') or (basedir / 'app' / 'ai' / 'models' / 'frank_emotion_detector_model.keras')
+    HAAR_CASCADE_PATH = os.environ.get('HAAR_CASCADE_PATH') or (basedir / 'app' / 'ai' / 'haarcascades' / 'haarcascade_frontalface_default.xml')
+    
     @staticmethod
     def validate_file_extension(filename):
         """

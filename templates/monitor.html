@@ -479,10 +479,10 @@ function updateMonitoringUI() {
 function startDataCollection() {
     updateInterval = setInterval(async () => {
         if (isMonitoring) {
-            await collectEmotionData();
+            await captureAndAnalyzeFrame();
             updateSessionStats();
         }
-    }, 3000); // Update every 3 seconds
+    }, 1000); // Update every 1 second (1 FPS) per specifiche - cambiabile facilmente
 }
 
 function stopDataCollection() {
@@ -492,7 +492,79 @@ function stopDataCollection() {
     }
 }
 
+async function captureAndAnalyzeFrame() {
+    /**
+     * Cattura un frame dalla webcam e lo invia al nuovo endpoint per l'analisi AI.
+     * In caso di errore, fa fallback al metodo mock esistente.
+     */
+    try {
+        const video = document.getElementById('webcamVideo');
+        
+        // Verifica che il video sia disponibile e in riproduzione
+        if (!video || video.videoWidth === 0 || video.videoHeight === 0) {
+            console.warn('Video non disponibile, uso fallback mock');
+            await collectEmotionData();
+            return;
+        }
+        
+        // Crea canvas offscreen per catturare il frame
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        // Imposta dimensioni del canvas 
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Disegna il frame corrente del video sul canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Converti in data URL JPEG compresso (qualità 0.6 per ridurre payload)
+        const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+        
+        // Invia il frame al nuovo endpoint per l'analisi
+        const response = await fetch(`/api/drivers/${driverId}/monitor/frame`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: dataURL
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const data = result.data;
+            dataPointsCount++;
+            
+            // Update chart con i nuovi dati (AI o mock)
+            addDataToChart(data);
+            
+            // Update overlay indicators
+            updateEmotionIndicators(data);
+            
+            // Log informazioni aggiuntive se disponibili dall'analisi AI
+            if (data.emotion && data.inferenceMs) {
+                console.log(`Emozione rilevata: ${data.emotion} (${data.inferenceMs}ms)`);
+            }
+        } else {
+            console.warn('Errore nell\'analisi del frame, uso fallback mock');
+            await collectEmotionData();
+        }
+        
+    } catch (error) {
+        console.error('Errore nella cattura/analisi del frame:', error);
+        // Fallback al metodo mock in caso di errore
+        await collectEmotionData();
+    }
+}
+
 async function collectEmotionData() {
+    /**
+     * Metodo fallback che usa l'endpoint mock esistente.
+     * Mantenuto per retrocompatibilità e come fallback robusto.
+     */
     try {
         const response = await fetch(`/api/drivers/${driverId}/monitor/data`);
         const result = await response.json();

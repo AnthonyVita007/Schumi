@@ -24,7 +24,12 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 - **HTML5** - Markup semantico per le pagine web
 - **CSS3** - Styling moderno con variabili CSS e design responsivo
 - **JavaScript Vanilla** - Logica frontend per interazioni e API calls
-- **Chart.js** - Libreria per visualizzazione grafici real-time
+- **Canvas API** - Overlay per visualizzazione real-time di face detection
+
+### **AI/ML Components**
+- **TensorFlow** - Framework per modelli di emotion detection
+- **OpenCV** - Computer vision per rilevamento volti tramite Haar Cascade
+- **NumPy** - Elaborazione numerica per preprocessing immagini
 
 ### **Design e UX**
 - **Palette Colori Verde** - Identità visiva basata su tonalità di verde (#2ECC71)
@@ -82,11 +87,12 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 - Cronologia classificazioni per ogni autista
 - Confidence score per affidabilità risultati
 
-### **📊 Monitoraggio Real-Time**
-- Interfaccia webcam per acquisizione video
-- Grafici dinamici per visualizzazione dati emotivi
-- Indicatori stress, focus e calma in tempo reale
-- Statistiche sessione (durata, dati raccolti)
+### **📊 Monitoraggio Real-Time con AI**
+- Interfaccia webcam per acquisizione video in tempo reale
+- **Rilevamento volti** tramite Haar Cascade con fallback automatico
+- **Analisi emozioni** tramite modelli TensorFlow integrati
+- Overlay canvas con bounding box e etichette emozioni
+- **Stabilità AI** con threading sicuro e gestione errori
 
 ### **🎨 Interfaccia Moderna**
 - Design pulito e intuitivo
@@ -112,6 +118,9 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 2. **Installazione Dipendenze**
    ```bash
    pip install -r requirements.txt
+   
+   # Per funzionalità AI (opzionale ma consigliato)
+   pip install tensorflow opencv-python numpy
    ```
 
 3. **Configurazione Ambiente** (Opzionale)
@@ -122,6 +131,14 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
    # Aggiungi configurazioni personalizzate
    echo "FLASK_ENV=development" >> .env
    echo "SECRET_KEY=your-secret-key-here" >> .env
+   
+   # Configurazioni server per stabilità (Windows)
+   echo "FLASK_USE_RELOADER=0" >> .env  # Disabilita auto-reload
+   echo "FLASK_THREADED=1" >> .env      # Abilita threading
+   
+   # Path AI custom (opzionali)
+   echo "EMOTION_MODEL_PATH=/path/to/custom/model.keras" >> .env
+   echo "HAAR_CASCADE_PATH=/path/to/custom/cascade.xml" >> .env
    ```
 
 4. **Avvio Applicazione**
@@ -150,9 +167,10 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 
 ### **3. Monitoraggio (`/monitor/<driver_id>`)**
 - **Webcam**: Acquisizione video in tempo reale (richiede permessi browser)
-- **Grafici**: Visualizzazione dinamica dati emotivi
-- **Controlli**: Avvio/stop sessione, pausa grafici, reset dati
-- **Statistiche**: Durata sessione, contatori, stato autista
+- **Face Detection**: Rilevamento automatico volti con overlay visivo
+- **Analisi AI**: Classificazione emozioni in tempo reale se modello disponibile
+- **Fallback**: Sistema robusto con dati mock se AI non disponibile
+- **Controlli**: Avvio/stop sessione monitoraggio
 
 ## **API Endpoints**
 
@@ -168,10 +186,44 @@ Il **Sistema di Gestione e Valutazione Autisti** è un'applicazione web completa
 - `GET /api/drivers/<id>/monitor` - Dati preparazione monitoraggio
 - `POST /api/drivers/<id>/monitor/start` - Avvia sessione monitoraggio
 - `POST /api/drivers/<id>/monitor/stop` - Interrompi sessione
-- `GET /api/drivers/<id>/monitor/data` - Dati emotivi real-time
+- `GET /api/drivers/<id>/monitor/data` - Dati emotivi real-time (fallback)
+- `POST /api/drivers/<id>/monitor/frame` - Analisi AI frame webcam (nuovo)
 
 ### **Utility**
 - `GET /api/health` - Stato salute applicazione
+
+## **Configurazione AI e Stabilità**
+
+### **Haar Cascade Fallback**
+Il sistema implementa un fallback automatico robusto per il caricamento delle Haar Cascade:
+
+1. **Path Custom**: Tenta caricamento da `HAAR_CASCADE_PATH` (configurabile)
+2. **Fallback Automatico**: Se fallisce, usa cascade built-in di OpenCV (`cv2.data.haarcascades`)
+3. **Validazione**: Verifica sempre che la cascade non sia vuota prima dell'uso
+4. **Logging**: Traccia dettagliato del processo di caricamento nei log
+
+### **Stabilità Threading**
+Per garantire stabilità su Windows e sistemi multi-thread:
+
+- **Serializzazione AI**: Lock dedicato per face detection + model inference
+- **Thread OpenCV**: Limitazione automatica thread interni (`cv2.setNumThreads(1)`)
+- **Configurabile**: Server reloader e threading tramite variabili ambiente
+
+### **Variabili d'Ambiente Server**
+```bash
+# Stabilità raccomandata per Windows
+FLASK_USE_RELOADER=0  # Disabilita auto-reload (evita conflitti)
+FLASK_THREADED=1      # Abilita threading (migliori performance)
+
+# Path AI personalizzati (opzionali)
+EMOTION_MODEL_PATH=/custom/path/model.keras
+HAAR_CASCADE_PATH=/custom/path/cascade.xml
+```
+
+### **Requisiti Windows**
+- **Percorsi ASCII**: Evitare caratteri non-ASCII nei path di progetto
+- **Threading**: Usare `FLASK_USE_RELOADER=0` per stabilità massima
+- **Dependencies**: Installare TensorFlow e OpenCV tramite pip
 
 ## **Considerazioni su Design e Stile**
 
@@ -241,6 +293,20 @@ python run.py
 export FLASK_PORT=5001
 python run.py
 ```
+
+**Errori AI/OpenCV (Windows)**
+```bash
+# Se problemi con percorsi non-ASCII
+FLASK_USE_RELOADER=0 FLASK_THREADED=1 python run.py
+
+# Reinstalla dipendenze AI se necessario
+pip uninstall opencv-python tensorflow
+pip install opencv-python tensorflow
+```
+
+**Haar Cascade non trovata**
+- Il sistema usa automaticamente fallback a OpenCV built-in
+- Controlla log per conferma: "Haar Cascade built-in caricata con successo (fallback)"
 
 ## **Contributi e Sviluppo**
 

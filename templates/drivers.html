@@ -458,6 +458,10 @@ function closeAddDriverModal() {
     document.getElementById('fileLabel').textContent = 'Seleziona file CSV';
 }
 
+// Make functions globally available for onclick handlers
+window.openAddDriverModal = openAddDriverModal;
+window.closeAddDriverModal = closeAddDriverModal;
+
 function handleFileSelect(event) {
     const file = event.target.files[0];
     const label = document.getElementById('fileLabel');

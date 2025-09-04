@@ -29,12 +29,16 @@ if __name__ == '__main__':
     host = os.environ.get('FLASK_HOST', '0.0.0.0')
     port = int(os.environ.get('FLASK_PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+    use_reloader = os.environ.get('FLASK_USE_RELOADER', '1') == '1'
+    threaded = os.environ.get('FLASK_THREADED', '1') == '1'
     
     print("=" * 60)
     print("🚗 Driver Management System - Starting Server")
     print("=" * 60)
     print(f"📍 Server will be available at: http://localhost:{port}")
     print(f"🛠️  Debug mode: {'Enabled' if debug else 'Disabled'}")
+    print(f"🔄 Auto-reloader: {'Enabled' if use_reloader else 'Disabled'}")
+    print(f"🧵 Threading: {'Enabled' if threaded else 'Disabled'}")
     print(f"📂 Upload directory: {app.config.get('UPLOAD_FOLDER', 'Not configured')}")
     print(f"💾 Database: {app.config.get('SQLALCHEMY_DATABASE_URI', 'Not configured')}")
     print("=" * 60)
@@ -44,11 +48,16 @@ if __name__ == '__main__':
     print("   • Monitor Page: /monitor/<driver_id>")
     print("   • API Health: /api/health")
     print("=" * 60)
+    print("📝 Environment Variables:")
+    print(f"   • FLASK_USE_RELOADER: {use_reloader} (0/1)")
+    print(f"   • FLASK_THREADED: {threaded} (0/1)")
+    print("=" * 60)
     
     # Run the development server
     app.run(
         host=host,
         port=port,
         debug=debug,
-        threaded=True  # Enable threading for better performance
+        use_reloader=use_reloader,
+        threaded=threaded
     )

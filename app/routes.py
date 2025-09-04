@@ -10,6 +10,7 @@ Date: 2024
 """
 
 import os
+import time
 from flask import Blueprint, render_template, request, jsonify, current_app, send_from_directory
 from werkzeug.exceptions import BadRequest
 
@@ -604,6 +605,144 @@ def api_get_realtime_emotion_data(driver_id):
         return jsonify({
             'success': False,
             'error': 'Errore nel recupero dei dati emotivi'
+        }), 500
+
+@main_bp.route('/api/drivers/<int:driver_id>/monitor/frame', methods=['POST'])
+def api_analyze_emotion_frame(driver_id):
+    """
+    API endpoint per analizzare un frame della webcam e restituire dati emotivi.
+    
+    Questo endpoint riceve un'immagine base64 catturata dalla webcam,
+    la analizza usando il modello Frank di emotion detection e restituisce
+    i dati emotivi in tempo reale. In caso di errore o modello non disponibile,
+    fa fallback ai dati mock.
+    
+    Args:
+        driver_id (int): ID dell'autista sotto monitoraggio
+        
+    Request Body:
+        {
+            "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
+        }
+        
+    Returns:
+        Response: JSON response con dati emotivi o fallback mock
+        
+    Example Response (successo):
+        {
+            "success": true,
+            "data": {
+                "time": "14:35:22",
+                "stress": 42.5,
+                "focus": 61.3,
+                "calm": 37.0,
+                "emotion": "Neutralita'",
+                "probs": { "Rabbia": 0.01, ... },
+                "inferenceMs": 65,
+                "bbox": { "x": 120, "y": 80, "w": 160, "h": 160 },
+                "timestamp": 1725460522.123
+            }
+        }
+        
+    Example Response (fallback):
+        {
+            "success": true,
+            "data": {
+                "time": "14:35:22",
+                "stress": 15.3,
+                "focus": 78.9,
+                "calm": 65.2,
+                "timestamp": 1642689322.123
+            }
+        }
+    """
+    try:
+        import datetime
+        
+        # Verifica che l'autista esista
+        driver = DriverService.get_driver_by_id(driver_id)
+        if not driver:
+            return jsonify({
+                'success': False,
+                'error': f'Autista con ID {driver_id} non trovato'
+            }), 404
+        
+        # Verifica che il body JSON contenga l'immagine
+        if not request.is_json:
+            return jsonify({
+                'success': False,
+                'error': 'Content-Type deve essere application/json'
+            }), 400
+            
+        data = request.get_json()
+        if not data or 'image' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Campo "image" richiesto nel body JSON'
+            }), 400
+        
+        image_data_url = data['image']
+        if not image_data_url:
+            return jsonify({
+                'success': False,
+                'error': 'Immagine base64 non valida'
+            }), 400
+        
+        # Tenta l'analisi con il modello AI
+        try:
+            from app.ai.emotion_detector import analyze_frame, get_emotion_metrics
+            
+            current_app.logger.debug(f"Analizzando frame per autista {driver_id}")
+            emotion_data = analyze_frame(image_data_url)
+            
+            if emotion_data is not None:
+                # Successo nell'analisi AI
+                metrics = get_emotion_metrics(emotion_data)
+                
+                response_data = {
+                    'time': datetime.datetime.now().strftime('%H:%M:%S'),
+                    'stress': metrics['stress'],
+                    'focus': metrics['focus'],
+                    'calm': metrics['calm'],
+                    'emotion': emotion_data['emotion'],
+                    'probs': emotion_data['probs'],
+                    'inferenceMs': emotion_data['inferenceMs'],
+                    'bbox': emotion_data['bbox'],
+                    'timestamp': time.time()
+                }
+                
+                current_app.logger.debug(f"Analisi AI completata: {emotion_data['emotion']}, {emotion_data['inferenceMs']}ms")
+                
+                return jsonify({
+                    'success': True,
+                    'data': response_data
+                })
+            else:
+                # Analisi AI fallita, usa fallback
+                current_app.logger.info(f"Analisi AI fallita per autista {driver_id}, uso fallback mock")
+                
+        except ImportError as e:
+            # Modulo AI non disponibile
+            current_app.logger.warning(f"Modulo AI non disponibile: {e}")
+            
+        except Exception as e:
+            # Errore nell'analisi AI
+            current_app.logger.error(f"Errore nell'analisi AI per autista {driver_id}: {e}")
+        
+        # Fallback ai dati mock
+        current_app.logger.info(f"Utilizzo dati mock per autista {driver_id}")
+        emotion_data = MonitoringService.generate_emotion_data()
+        
+        return jsonify({
+            'success': True,
+            'data': emotion_data
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Errore nell'analisi del frame per autista {driver_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Errore nell\'analisi del frame'
         }), 500
 
 # ========================

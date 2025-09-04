@@ -142,3 +142,9 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# AI/ML model files (exclude large model files from git)
+app/ai/models/*.keras
+app/ai/models/*.h5
+app/ai/models/*.pb
+app/ai/models/*.tflite

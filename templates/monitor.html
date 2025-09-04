@@ -48,59 +48,28 @@
 
 <!-- Monitoring Content -->
 <div class="container">
-    <div class="monitoring-layout">
-        <div class="monitoring-sidebar">
-            <div class="webcam-section">
-                <div class="webcam-header">
-                    <h3>Camera</h3>
-                    <div class="webcam-status">
-                        <span class="status-indicator" id="webcamStatus"></span>
-                        <span id="webcamStatusText">Inizializzazione...</span>
-                    </div>
-                </div>
-                
-                <div class="webcam-container">
-                    <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
-                    <!-- Canvas overlay for face detection box and emotion label -->
-                    <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
-                    <div id="webcamOverlay" class="webcam-overlay">
-                        <div class="webcam-message">
-                            <div class="webcam-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                                    <circle cx="12" cy="13" r="4"></circle>
-                                </svg>
-                            </div>
-                            <p id="webcamMessageText">Inizializzazione webcam...</p>
-                        </div>
-                    </div>
-                </div>
+    <div class="webcam-section">
+        <div class="webcam-header">
+            <h3>Camera</h3>
+            <div class="webcam-status">
+                <span class="status-indicator" id="webcamStatus"></span>
+                <span id="webcamStatusText">Inizializzazione...</span>
             </div>
         </div>
         
-        <!-- Emotion Overlay -->
-        <div id="emotionOverlay" class="emotion-overlay hidden">
-            <div class="emotion-content">
-                <h3>Stato Emotivo</h3>
-                <div class="emotion-indicators">
-                    <div class="emotion-bar">
-                        <label>Stress</label>
-                        <div class="bar-container">
-                            <div id="stressBar" class="bar stress-bar"></div>
-                        </div>
+        <div class="webcam-container">
+            <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
+            <!-- Canvas overlay for face detection box and emotion label -->
+            <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+            <div id="webcamOverlay" class="webcam-overlay">
+                <div class="webcam-message">
+                    <div class="webcam-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
                     </div>
-                    <div class="emotion-bar">
-                        <label>Focus</label>
-                        <div class="bar-container">
-                            <div id="focusBar" class="bar focus-bar"></div>
-                        </div>
-                    </div>
-                    <div class="emotion-bar">
-                        <label>Calma</label>
-                        <div class="bar-container">
-                            <div id="calmBar" class="bar calm-bar"></div>
-                        </div>
-                    </div>
+                    <p id="webcamMessageText">Inizializzazione webcam...</p>
                 </div>
             </div>
         </div>
@@ -296,16 +265,12 @@ function updateMonitoringUI() {
         buttonText.textContent = 'Interrompi Monitoraggio';
         startIcon.classList.add('hidden');
         stopIcon.classList.remove('hidden');
-        
-        document.getElementById('emotionOverlay').classList.remove('hidden');
     } else {
         button.classList.remove('btn-danger');
         button.classList.add('btn-primary');
         buttonText.textContent = 'Avvia Monitoraggio';
         startIcon.classList.remove('hidden');
         stopIcon.classList.add('hidden');
-        
-        document.getElementById('emotionOverlay').classList.add('hidden');
     }
 }
 
@@ -439,10 +404,13 @@ function updateCanvasOverlay(data) {
 }
 
 function updateEmotionBars(data) {
+    // Emotion bars have been removed from the UI, but we keep this function
+    // for compatibility and to prevent errors. It's now a no-op.
     const stressBar = document.getElementById('stressBar');
     const focusBar = document.getElementById('focusBar');
     const calmBar = document.getElementById('calmBar');
     
+    // Only update if elements exist (they won't in the simplified UI)
     if (stressBar && data.stress !== undefined) {
         stressBar.style.width = (data.stress * 100) + '%';
     }

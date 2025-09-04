@@ -28,6 +28,7 @@ from pathlib import Path
 _model = None
 _cascade = None
 _model_lock = threading.Lock()
+_infer_lock = threading.Lock()  # Lock per serializzare face detection + inferenza
 
 # Etichette delle emozioni nell'ordine del training del modello
 EMOTION_LABELS = [
@@ -38,6 +39,7 @@ EMOTION_LABELS = [
 def _load_model_and_cascade():
     """
     Carica lazy il modello Keras e la Haar Cascade per il face detection.
+    Con fallback automatico alla cascade built-in di OpenCV se il path custom fallisce.
     
     Returns:
         Tuple[Any, Any]: (model, cascade) o (None, None) se il caricamento fallisce
@@ -58,17 +60,16 @@ def _load_model_and_cascade():
             import tensorflow as tf
             from flask import current_app
             
+            # Limita i thread di OpenCV per stabilità su Windows
+            cv2.setNumThreads(1)
+            
             # Carica i path dalla configurazione
             model_path = Path(current_app.config['EMOTION_MODEL_PATH'])
             cascade_path = Path(current_app.config['HAAR_CASCADE_PATH'])
             
-            # Verifica che i file esistano
+            # Verifica che il modello esista
             if not model_path.exists():
                 current_app.logger.warning(f"Modello di emotion detection non trovato: {model_path}")
-                return None, None
-                
-            if not cascade_path.exists():
-                current_app.logger.warning(f"Haar Cascade non trovato: {cascade_path}")
                 return None, None
             
             # Carica il modello Keras
@@ -76,16 +77,41 @@ def _load_model_and_cascade():
             _model = tf.keras.models.load_model(str(model_path))
             current_app.logger.info("Modello caricato con successo")
             
-            # Carica la Haar Cascade
-            current_app.logger.info(f"Caricamento Haar Cascade: {cascade_path}")
-            _cascade = cv2.CascadeClassifier(str(cascade_path))
+            # Carica la Haar Cascade con fallback
+            cascade_loaded = False
             
-            if _cascade.empty():
-                current_app.logger.error("Errore nel caricamento della Haar Cascade")
+            # Prova prima il path custom
+            if cascade_path.exists():
+                current_app.logger.info(f"Tentativo caricamento Haar Cascade custom: {cascade_path}")
+                temp_cascade = cv2.CascadeClassifier(str(cascade_path))
+                
+                if not temp_cascade.empty():
+                    _cascade = temp_cascade
+                    cascade_loaded = True
+                    current_app.logger.info("Haar Cascade custom caricata con successo")
+                else:
+                    current_app.logger.warning("Haar Cascade custom vuota, tentativo fallback")
+            else:
+                current_app.logger.warning(f"Haar Cascade custom non trovata: {cascade_path}")
+            
+            # Fallback alla cascade built-in di OpenCV
+            if not cascade_loaded:
+                fallback_path = Path(cv2.data.haarcascades) / 'haarcascade_frontalface_default.xml'
+                current_app.logger.info(f"Tentativo fallback Haar Cascade built-in: {fallback_path}")
+                
+                temp_cascade = cv2.CascadeClassifier(str(fallback_path))
+                
+                if not temp_cascade.empty():
+                    _cascade = temp_cascade
+                    cascade_loaded = True
+                    current_app.logger.info("Haar Cascade built-in caricata con successo (fallback)")
+                else:
+                    current_app.logger.error("Anche la Haar Cascade built-in è vuota")
+            
+            if not cascade_loaded:
+                current_app.logger.error("Errore nel caricamento di qualsiasi Haar Cascade")
                 return None, None
                 
-            current_app.logger.info("Haar Cascade caricata con successo")
-            
             return _model, _cascade
             
         except ImportError as e:
@@ -317,23 +343,25 @@ def analyze_frame(image_data_url: str) -> Optional[Dict[str, Any]]:
         if image_bgr is None:
             return None
             
-        # Rileva il volto più grande
-        face_bbox = _detect_largest_face(image_bgr, cascade)
-        if face_bbox is None:
-            # Nessun volto rilevato, restituisci valori neutrali
-            neutral_data = _get_neutral_emotion_data()
-            neutral_data['inferenceMs'] = round((time.time() - start_time) * 1000, 1)
-            return neutral_data
-            
-        # Preprocessa l'immagine del volto
-        face_input = _preprocess_face_image(image_bgr, face_bbox)
-        if face_input is None:
-            return None
-            
-        # Esegui l'inferenza
-        inference_start = time.time()
-        predictions = model.predict(face_input, verbose=0)
-        inference_time = (time.time() - inference_start) * 1000
+        # Serializza face detection + inferenza con lock per evitare race conditions
+        with _infer_lock:
+            # Rileva il volto più grande
+            face_bbox = _detect_largest_face(image_bgr, cascade)
+            if face_bbox is None:
+                # Nessun volto rilevato, restituisci valori neutrali
+                neutral_data = _get_neutral_emotion_data()
+                neutral_data['inferenceMs'] = round((time.time() - start_time) * 1000, 1)
+                return neutral_data
+                
+            # Preprocessa l'immagine del volto
+            face_input = _preprocess_face_image(image_bgr, face_bbox)
+            if face_input is None:
+                return None
+                
+            # Esegui l'inferenza
+            inference_start = time.time()
+            predictions = model.predict(face_input, verbose=0)
+            inference_time = (time.time() - inference_start) * 1000
         
         # Estrai le probabilità
         if predictions.shape[1] != len(EMOTION_LABELS):

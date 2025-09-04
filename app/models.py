@@ -6,7 +6,7 @@ It follows Object-Oriented Programming principles with well-defined classes
 for representing drivers, classifications, and monitoring sessions.
 
 Author: Schumi Development Team
-Date: 2024
+Date: 2025
 """
 
 from datetime import datetime

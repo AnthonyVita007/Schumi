@@ -48,7 +48,6 @@ dependencies:
   - ipython=8.30.0=py310haa95532_0
   - ipywidgets=8.1.5=py310haa95532_0
   - jedi=0.19.2=py310haa95532_0
-  - jinja2=3.1.6=py310haa95532_0
   - jpeg=9e=h827c3e9_3
   - json5=0.9.25=py310haa95532_0
   - jsonschema=4.25.0=py310haa95532_0
@@ -85,7 +84,6 @@ dependencies:
   - libwebp-base=1.3.2=h3d04722_1
   - libxml2=2.13.8=h866ff63_0
   - lz4-c=1.9.4=h2bbff1b_1
-  - markupsafe=3.0.2=py310h827c3e9_0
   - matplotlib=3.10.0=py310haa95532_0
   - matplotlib-base=3.10.0=py310he19b0ae_0
   - matplotlib-inline=0.1.6=py310haa95532_0
@@ -160,7 +158,6 @@ dependencies:
   - tomli=2.2.1=py310haa95532_0
   - tornado=6.5.1=py310h827c3e9_0
   - traitlets=5.14.3=py310haa95532_0
-  - typing_extensions=4.12.2=py310haa95532_0
   - tzdata=2025b=h04d1e81_0
   - ucrt=10.0.22621.0=haa95532_0
   - unicodedata2=15.1.0=py310h827c3e9_1
@@ -183,27 +180,37 @@ dependencies:
   - pip:
       - absl-py==2.3.1
       - astunparse==1.6.3
+      - blinker==1.9.0
       - cachetools==5.5.2
       - charset-normalizer==3.4.2
+      - click==8.1.7
+      - flask==3.0.0
+      - flask-sqlalchemy==3.1.1
       - flatbuffers==25.2.10
       - gast==0.6.0
       - google-auth==2.40.3
       - google-auth-oauthlib==1.2.2
       - google-pasta==0.2.0
+      - greenlet==3.2.4
       - grpcio==1.74.0
       - h5py==3.14.0
       - idna==3.10
+      - itsdangerous==2.1.2
+      - jinja2==3.1.2
       - keras==2.15.0
       - libclang==18.1.1
       - markdown==3.8.2
+      - markupsafe==2.1.3
       - ml-dtypes==0.2.0
       - oauthlib==3.3.1
       - opt-einsum==3.4.0
       - protobuf==4.25.8
       - pyasn1==0.6.1
       - pyasn1-modules==0.4.2
+      - python-dotenv==1.0.0
       - requests-oauthlib==2.0.0
       - rsa==4.9.1
+      - sqlalchemy==2.0.23
       - tensorboard==2.15.2
       - tensorboard-data-server==0.7.2
       - tensorflow==2.15.0
@@ -212,6 +219,6 @@ dependencies:
       - tensorflow-io-gcs-filesystem==0.31.0
       - termcolor==3.1.0
       - typing-extensions==4.14.1
-      - werkzeug==3.1.3
+      - werkzeug==3.0.1
       - wrapt==1.14.1
 prefix: C:\Users\vitaa\anaconda3\envs\shumi_env

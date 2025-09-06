@@ -57,10 +57,12 @@
             </div>
         </div>
         
-        <div class="webcam-container">
+        <div class="webcam-container" id="webcamContainer">
             <video id="webcamVideo" class="webcam-video" autoplay playsinline muted></video>
             <!-- Canvas overlay for face detection box and emotion label -->
             <canvas id="overlayCanvas" class="overlay-canvas"></canvas>
+            
+            <!-- Camera initialization overlay (existing) -->
             <div id="webcamOverlay" class="webcam-overlay">
                 <div class="webcam-message">
                     <div class="webcam-icon">
@@ -70,6 +72,21 @@
                         </svg>
                     </div>
                     <p id="webcamMessageText">Inizializzazione webcam...</p>
+                </div>
+            </div>
+            
+            <!-- Idle state overlay -->
+            <div id="overlayIdle" class="monitoring-overlay monitoring-overlay--idle" aria-hidden="false">
+                <div class="monitoring-overlay__content">
+                    <span class="monitoring-overlay__text">Monitoraggio disattivato</span>
+                </div>
+            </div>
+            
+            <!-- Loading state overlay -->
+            <div id="overlayLoading" class="monitoring-overlay monitoring-overlay--loading" role="status" aria-live="assertive" aria-hidden="true">
+                <div class="monitoring-overlay__content">
+                    <div class="monitoring-spinner" aria-label="Caricamento del modello di computer vision in corso"></div>
+                    <span class="monitoring-overlay__text">Caricamento del modello di computer vision…</span>
                 </div>
             </div>
         </div>
@@ -118,11 +135,44 @@ let overlayCtx = null;
 // Initialize monitoring page
 initializeMonitoringPage();
 
+// Monitoring state management functions
+function setMonitoringState(state) {
+    const container = document.getElementById('webcamContainer');
+    const overlayIdle = document.getElementById('overlayIdle');
+    const overlayLoading = document.getElementById('overlayLoading');
+    
+    switch (state) {
+        case 'idle':
+            container.classList.remove('is-monitoring');
+            overlayLoading.classList.remove('is-visible');
+            overlayLoading.setAttribute('aria-hidden', 'true');
+            overlayIdle.setAttribute('aria-hidden', 'false');
+            break;
+            
+        case 'loading':
+            container.classList.remove('is-monitoring');
+            overlayIdle.setAttribute('aria-hidden', 'true');
+            overlayLoading.classList.add('is-visible');
+            overlayLoading.setAttribute('aria-hidden', 'false');
+            break;
+            
+        case 'active':
+            container.classList.add('is-monitoring');
+            overlayLoading.classList.remove('is-visible');
+            overlayLoading.setAttribute('aria-hidden', 'true');
+            overlayIdle.setAttribute('aria-hidden', 'true');
+            break;
+    }
+}
+
 async function initializeMonitoringPage() {
     if (!driverId) {
         showError('ID autista non valido');
         return;
     }
+    
+    // Initialize in idle state
+    setMonitoringState('idle');
     
     setupWebcam();
     setupOverlayCanvas();
@@ -203,6 +253,9 @@ async function toggleMonitoring() {
 }
 
 async function startMonitoring() {
+    // Show loading state immediately when button is clicked
+    setMonitoringState('loading');
+    
     try {
         const response = await fetch(`/api/drivers/${driverId}/monitor/start`, {
             method: 'POST'
@@ -215,15 +268,21 @@ async function startMonitoring() {
             sessionStartTime = Date.now();
             dataPointsCount = 0;
             
+            // Transition to active state
+            setMonitoringState('active');
             updateMonitoringUI();
             startDataCollection();
             
             showFlashMessage('Monitoraggio avviato con successo', 'success');
         } else {
+            // On error, return to idle state
+            setMonitoringState('idle');
             showError('Errore nell\'avvio del monitoraggio: ' + result.error);
         }
     } catch (error) {
         console.error('Error starting monitoring:', error);
+        // On error, return to idle state
+        setMonitoringState('idle');
         showError('Errore di connessione nell\'avvio del monitoraggio');
     }
 }
@@ -240,6 +299,8 @@ async function stopMonitoring() {
             isMonitoring = false;
             sessionStartTime = null;
             
+            // Return to idle state
+            setMonitoringState('idle');
             updateMonitoringUI();
             stopDataCollection();
             

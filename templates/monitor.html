@@ -395,11 +395,25 @@ function updateCanvasOverlay(data) {
         if (data.emotion) {
             overlayCtx.fillStyle = '#22c55e';
             overlayCtx.font = '16px Arial';
-            overlayCtx.fillText(data.emotion, x, y - 10);
+            overlayCtx.fillText(data.emotion, x, Math.max(16, y - 10));
+        }
+    } else {
+        // Debug: mostra comunque l’emozione in alto a sinistra quando non c’è bbox
+        if (data.emotion) {
+            const text = data.emotion;
+            overlayCtx.font = '16px Arial';
+            const metrics = overlayCtx.measureText(text);
+            const pad = 6;
+            const rectW = metrics.width + pad * 2;
+            const rectH = 22;
+            overlayCtx.fillStyle = 'rgba(255,255,255,0.9)';
+            overlayCtx.fillRect(8, 8, rectW, rectH);
+            overlayCtx.fillStyle = '#111827';
+            overlayCtx.fillText(text, 8 + pad, 8 + rectH - 6);
         }
     }
     
-    // Update emotion bars
+    // Update emotion bars (no-op nella UI attuale)
     updateEmotionBars(data);
 }
 
@@ -410,7 +424,6 @@ function updateEmotionBars(data) {
     const focusBar = document.getElementById('focusBar');
     const calmBar = document.getElementById('calmBar');
     
-    // Only update if elements exist (they won't in the simplified UI)
     if (stressBar && data.stress !== undefined) {
         stressBar.style.width = (data.stress * 100) + '%';
     }
@@ -462,4 +475,3 @@ window.addEventListener('beforeunload', () => {
     }
 });
 {% endblock %}
-

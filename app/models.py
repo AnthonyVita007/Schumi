@@ -21,9 +21,9 @@ class Classification(Enum):
     after their simulation data has been analyzed by the ML model.
     """
     UNCLASSIFIED = "Non Classificato"
-    BEGINNER = "Principiante"
-    EFFICIENT = "Efficiente"
-    EXPERT = "Esperto"
+    BEGINNER = "Calmo"
+    EFFICIENT = "Medio"
+    EXPERT = "Aggressivo"
     
     def __str__(self):
         return self.value

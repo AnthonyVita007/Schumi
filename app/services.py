@@ -20,7 +20,9 @@ from flask import current_app
 from . import db
 from .models import Driver, Classification, MonitoringStatus, SimulationData, ClassificationResult
 from .config import Config
-
+import joblib
+import pandas as pd
+import numpy as np
 class DriverService:
     """
     Service class for managing driver-related operations.
@@ -247,14 +249,7 @@ class ClassificationService:
     This class handles the simulation of ML-based driver classification,
     providing placeholder functionality that can be replaced with actual
     machine learning models in the future.
-    """
-    
-    # Classification probabilities for simulation
-    CLASSIFICATION_WEIGHTS = {
-        Classification.BEGINNER: 0.3,
-        Classification.EFFICIENT: 0.4,
-        Classification.EXPERT: 0.3
-    }
+    """ 
     
     @staticmethod
     def classify_driver(driver_id: int) -> Tuple[Classification, float]:
@@ -281,13 +276,39 @@ class ClassificationService:
         if not driver.simulation_file:
             raise ValueError("Nessun file di simulazione trovato per questo autista")
         
-        # Simulate processing delay (real ML would take time)
-        time.sleep(random.uniform(1.5, 3.0))
-        
-        # Simulate classification logic
-        # In real implementation, this would analyze CSV data
-        classification = ClassificationService._simulate_classification_analysis()
-        confidence_score = random.uniform(0.75, 0.95)  # High confidence simulation
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], driver.simulation_file)
+        df = pd.read_csv(file_path)
+
+        # --- Feature extraction: select the same columns as in training ---
+        # Replace this with the actual feature columns used in your model
+        feature_columns = [col for col in df.columns if col != 'stile_guida']
+        features = df[feature_columns]
+
+        # Load scaler and model (adjust path if needed)
+        scaler = joblib.load('scaler.pkl')
+        model = joblib.load('random_forest_model.pkl')
+
+        # Scale features
+        features_scaled = scaler.transform(features)
+
+        # Predict for each row, then use the most frequent prediction
+        y_pred = model.predict(features_scaled)
+        y_proba = model.predict_proba(features_scaled)
+
+        # Majority vote for classification
+        unique, counts = np.unique(y_pred, return_counts=True)
+        majority_class = unique[np.argmax(counts)]
+        # Confidence: mean probability for the majority class
+        majority_index = list(model.classes_).index(majority_class)
+        confidence = float(np.mean(y_proba[:, majority_index]))
+
+        mapping = {
+        "aggressivo": Classification.EXPERT,
+        "medio": Classification.EFFICIENT,
+        "calmo": Classification.BEGINNER
+}
+        print("Predicted class:", majority_class)
+        classification = mapping.get(majority_class, Classification.UNCLASSIFIED)
         
         # Update driver's classification
         old_classification = driver.classification
@@ -298,12 +319,12 @@ class ClassificationService:
             driver_id=driver_id,
             old_classification=old_classification,
             new_classification=classification,
-            confidence_score=confidence_score
+            confidence_score=confidence
         )
         db.session.add(result)
         db.session.commit()
         
-        return classification, confidence_score
+        return classification, confidence
     
     @staticmethod
     def _simulate_classification_analysis() -> Classification:

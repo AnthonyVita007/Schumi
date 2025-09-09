@@ -41,6 +41,11 @@ class Config:
     EMOTION_MODEL_PATH = os.environ.get('EMOTION_MODEL_PATH') or (basedir / 'app' / 'ai' / 'models' / 'frank_emotion_detector_model.keras')
     HAAR_CASCADE_PATH = os.environ.get('HAAR_CASCADE_PATH') or (basedir / 'app' / 'ai' / 'haarcascades' / 'haarcascade_frontalface_default.xml')
     
+    # Preprocessing mode for emotion model:
+    # - 'rgb01'   -> BGR->RGB + /255.0 (pipeline standard)
+    # - 'raw_bgr' -> BGR uint8 0..255 (come nel notebook condiviso)
+    EMOTION_PREPROCESS_MODE = os.environ.get('EMOTION_PREPROCESS_MODE', 'raw_bgr')
+    
     @staticmethod
     def validate_file_extension(filename):
         """
